@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flexpromoter/features/auth/models/user_model.dart';
+import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flexpromoter/utils/services/api_service.dart';
+
 
 class AuthRepo {
   final ApiService _apiService = ApiService();
@@ -46,12 +48,9 @@ class AuthRepo {
     }
   }
 
-
-
   // Function to verify OTP
   Future<Response> verifyOtp(String phoneNumber, String otp) async {
     try {
-     
       final String url =
           "${dotenv.env["PROD_ENDPOINT_AUTH"]!}/promoter/verify-otp";
 
@@ -61,7 +60,7 @@ class AuthRepo {
           "phone_number": phoneNumber,
           "otp": otp,
         },
-        requiresAuth: false, 
+        requiresAuth: false,
       );
 
       // Parse the response data
@@ -79,17 +78,17 @@ class AuthRepo {
         ),
       );
 
-      
+      // In your auth flow
+      final userModel = UserModel.fromJson(response.data);
+      await SharedPreferencesHelper.saveUserData(response.data);
+
       print("OTP verification succeeded: ${response.data}");
       return response;
     } on DioException catch (e) {
-      
       print("OTP verification failed: ${e.message}");
-      rethrow; 
+      rethrow;
     }
   }
-
-
 
   //Getter for the UserModel
   UserModel? get userModel => _userModel;

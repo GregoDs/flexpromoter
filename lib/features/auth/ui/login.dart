@@ -4,6 +4,7 @@ import 'package:flexpromoter/features/auth/cubit/auth_cubit.dart';
 import 'package:flexpromoter/features/auth/cubit/auth_state.dart';
 import 'package:flexpromoter/utils/widgets/scaffold_messengers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flexpromoter/gen/colors.gen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,9 +22,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
       body: SafeArea(
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
@@ -85,9 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: Image.asset(
-                      'assets/images/happyafricanlogin.png',
-                      width: screenWidth * 0.5,
-                      height: screenHeight * 0.25,
+                      'assets/images/onboardingSlide1.png',                          
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -100,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         fontFamily: 'Montserrat',
                         fontSize: screenWidth * 0.08,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: isDarkMode ? Colors.white : Colors.black,
                       ),
                     ),
                   ),
@@ -110,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(
                       fontFamily: 'Montserrat',
                       fontSize: screenWidth * 0.05,
-                      color: Colors.grey,
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey,
                     ),
                   ),
                   SizedBox(height: screenHeight * 0.05),
@@ -119,20 +119,39 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(
                       fontFamily: 'Montserrat',
                       fontSize: screenWidth * 0.045,
-                      color: Colors.black,
+                      color: isDarkMode ? Colors.white : Colors.black,
                     ),
                     decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.phone),
+                      prefixIcon: Icon(
+                        Icons.phone,
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey,
+                      ),
                       labelText: "Phone Number",
                       hintText: "Enter your phone number",
                       labelStyle: TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: screenWidth * 0.045,
-                        color: Colors.grey,
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(screenWidth * 0.03),
                       ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(screenWidth * 0.03),
+                        borderSide: BorderSide(
+                          color: isDarkMode
+                              ? Colors.grey[700]!
+                              : Colors.grey[300]!,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(screenWidth * 0.03),
+                        borderSide: BorderSide(
+                          color: ColorName.primaryColor,
+                        ),
+                      ),
+                      filled: isDarkMode,
+                      fillColor: isDarkMode ? Colors.grey[900] : null,
                     ),
                     enabled: !_isLoading,
                   ),
@@ -160,8 +179,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF337687),
-                        elevation: 5,
+                        backgroundColor: ColorName.primaryColor,
+                        elevation: isDarkMode ? 2 : 5,
                         padding: EdgeInsets.symmetric(
                           vertical: screenHeight * 0.018,
                         ),
@@ -175,7 +194,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           : () {
                               final phoneNumber = phoneController.text.trim();
                               if (phoneNumber.isNotEmpty) {
-                                // Save phone number to SharedPreferences
                                 SharedPreferences.getInstance().then((prefs) {
                                   prefs.setString('phone_number', phoneNumber);
                                 });
@@ -225,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: screenWidth * 0.045,
-                          color: const Color(0xFF337687),
+                          color: ColorName.primaryColor,
                         ),
                       ),
                     ),

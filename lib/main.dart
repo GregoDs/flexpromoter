@@ -8,7 +8,6 @@ import 'package:overlay_support/overlay_support.dart';
 
 import 'exports.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -32,6 +31,17 @@ class MyApp extends StatelessWidget {
           child: MaterialApp(
             title: 'Flexpay Promoter',
             debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              brightness: Brightness.light,
+              primaryColor: ColorName.primaryColor,
+              scaffoldBackgroundColor: ColorName.whiteColor,
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              primaryColor: ColorName.primaryColor,
+              scaffoldBackgroundColor: const Color(0xFF1A1A1A),
+            ),
+            themeMode: ThemeMode.system,
             routes: AppRoutes.routes,
             home: const SplashScreen(),
           ),

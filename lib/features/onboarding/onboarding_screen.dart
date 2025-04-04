@@ -29,6 +29,8 @@ class _OnBoardingState extends State<OnBoardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SingleChildScrollView(
@@ -40,7 +42,11 @@ class _OnBoardingState extends State<OnBoardingScreen> {
               Container(
                 height: double.maxFinite,
                 width: double.maxFinite,
-                decoration: const BoxDecoration(color: ColorName.whiteColor),
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? const Color(0xFF1A1A1A)
+                      : ColorName.whiteColor,
+                ),
               ),
               PageView(
                 physics: const ClampingScrollPhysics(),
@@ -109,8 +115,10 @@ class _OnBoardingState extends State<OnBoardingScreen> {
                                 shape: WidgetStateProperty.all(
                                   RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(24),
-                                    side: const BorderSide(
-                                      color: ColorName.primaryColor,
+                                    side: BorderSide(
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : ColorName.primaryColor,
                                     ),
                                   ),
                                 ),
@@ -124,7 +132,9 @@ class _OnBoardingState extends State<OnBoardingScreen> {
                                 children: [
                                   AppText.medium(
                                     'Get Started',
-                                    color: ColorName.primaryColor,
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : ColorName.primaryColor,
                                     fontSize: 18,
                                     fontWeight: FontWeight.normal,
                                   ),
@@ -156,14 +166,18 @@ class _OnBoardingState extends State<OnBoardingScreen> {
                                       vertical: 2.4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: ColorName.whiteColor,
+                                      color: isDarkMode
+                                          ? Colors.grey[800]
+                                          : ColorName.whiteColor,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: AppText.medium(
                                       'Skip',
                                       fontWeight: FontWeight.normal,
                                       fontSize: 14,
-                                      color: ColorName.blackColor,
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : ColorName.blackColor,
                                     ),
                                   ),
                                 )
@@ -186,14 +200,18 @@ class _OnBoardingState extends State<OnBoardingScreen> {
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: ColorName.lightGrey,
+                                color: isDarkMode
+                                    ? Colors.grey[800]
+                                    : ColorName.lightGrey,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: AppText.medium(
                                 'Next',
                                 fontWeight: FontWeight.normal,
                                 fontSize: 14,
-                                color: ColorName.blackColor,
+                                color: isDarkMode
+                                    ? Colors.white
+                                    : ColorName.blackColor,
                               ),
                             ),
                           ),
@@ -209,6 +227,8 @@ class _OnBoardingState extends State<OnBoardingScreen> {
 
   Widget makePage(
       {required Widget image, required String title, required String content}) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
@@ -228,7 +248,7 @@ class _OnBoardingState extends State<OnBoardingScreen> {
             child: AppText.large(
               title,
               textAlign: TextAlign.center,
-              color: ColorName.primaryColor,
+              color: isDarkMode ? Colors.white : ColorName.primaryColor,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -241,7 +261,7 @@ class _OnBoardingState extends State<OnBoardingScreen> {
             child: AppText.medium(
               content,
               textAlign: TextAlign.center,
-              color: ColorName.blackColor,
+              color: isDarkMode ? Colors.grey[300] : ColorName.blackColor,
               fontSize: 16,
               fontWeight: FontWeight.normal,
             ),
@@ -271,8 +291,9 @@ class _OnBoardingState extends State<OnBoardingScreen> {
       width: isActive ? 30 : 6,
       margin: const EdgeInsets.only(right: 5),
       decoration: BoxDecoration(
-          color: ColorName.primaryColor,
-          borderRadius: BorderRadius.circular(5)),
+        color: ColorName.primaryColor,
+        borderRadius: BorderRadius.circular(5),
+      ),
     );
   }
 

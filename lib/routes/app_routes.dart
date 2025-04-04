@@ -1,4 +1,6 @@
 import 'package:flexpromoter/features/auth/ui/otpverification.dart';
+import 'package:flexpromoter/features/commissions/cubit/commissions_cubit.dart';
+import 'package:flexpromoter/features/commissions/ui/commissions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flexpromoter/features/auth/cubit/auth_cubit.dart';
 import 'package:flexpromoter/features/auth/repo/auth_repo.dart';
@@ -6,9 +8,11 @@ import 'package:flexpromoter/features/auth/ui/login.dart';
 import 'package:flexpromoter/features/home/ui/home.dart';
 import 'package:flexpromoter/features/onboarding/splash_screen.dart';
 import 'package:flexpromoter/features/onboarding/onboarding_screen.dart';
+import 'package:flexpromoter/features/commissions/repo/commission_repo.dart';
 
-// Create a global AuthCubit instance
+// Create global Cubit instances
 final authCubit = AuthCubit(AuthRepo());
+final commissionsCubit = CommissionsCubit(repository: CommissionRepository());
 
 class AppRoutes {
   static final routes = {
@@ -28,7 +32,10 @@ class AppRoutes {
     //       validatedReceipts: _validatedReceipts,
     //     ),
     // Routes.bookings: (context) => const Bookings(),
-    // Routes.commissions: (context) => const Commissions(),
+    Routes.commissions: (context) => BlocProvider.value(
+          value: commissionsCubit,
+          child: const Commissions(),
+        ),
     // Routes.leaderboard: (context) => const Leaderboard(),
   };
 }
