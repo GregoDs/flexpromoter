@@ -5,8 +5,11 @@ import 'package:flexpromoter/utils/services/error_handler.dart';
 class ApiService {
   final Dio _dio = Dio(
     BaseOptions(
-      connectTimeout: const Duration(milliseconds: 5000), // 5 seconds
-      receiveTimeout: const Duration(milliseconds: 5000), // 5 seconds
+      connectTimeout:
+          const Duration(seconds: 30), // Increased from 5 to 30 seconds
+      receiveTimeout:
+          const Duration(seconds: 30), // Increased from 5 to 30 seconds
+      sendTimeout: const Duration(seconds: 30), // Added send timeout
     ),
   );
 
@@ -40,7 +43,12 @@ class ApiService {
       final response = await _dio.post(
         url,
         data: data,
-        options: Options(headers: headers),
+        options: Options(
+          headers: headers,
+          receiveTimeout:
+              const Duration(seconds: 30), // Added explicit timeout here too
+          sendTimeout: const Duration(seconds: 30),
+        ),
       );
       print("POST Request to $url succeeded with response: ${response.data}");
       return response;

@@ -275,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     padding: EdgeInsets.symmetric(horizontal: 20.w),
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.pushNamed(context, '/make_bookings');
+                        Navigator.pushNamed(context, '/make-bookings');
                       },
                       child: Container(
                         height: 180.h,
@@ -455,7 +455,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             if (title == "Commissions") {
               Navigator.pushNamed(context, '/commissions');
             } else if (title == "View Bookings") {
-              Navigator.pushNamed(context, '/view_bookings');
+              Navigator.pushNamed(context, '/bookings');
             } else if (title == "LeaderBoard") {
               Navigator.pushNamed(context, '/leaderboard');
             }

@@ -78,7 +78,6 @@ class User {
       'profile_picture': profilePicture,
       'api_token': apiToken,
       'id_number': idNumber,
-      
       'dob': dob,
       'phone_number': phoneNumber,
     };

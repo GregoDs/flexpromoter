@@ -1,10 +1,5 @@
 import 'package:flexpromoter/features/onboarding/splash_screen.dart';
-import 'package:flexpromoter/routes/app_routes.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:overlay_support/overlay_support.dart';
 
 import 'exports.dart';
 
