@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 import 'package:flexpromoter/exports.dart';
 import 'package:flexpromoter/features/auth/models/user_model.dart';
+import 'package:flexpromoter/features/bookings/models/booking_response_model.dart';
 import 'package:flexpromoter/features/bookings/models/bookings_model.dart';
 import 'package:flexpromoter/features/bookings/models/make_bookings_model.dart';
 import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
@@ -177,12 +178,26 @@ class BookingsRepository {
         // Log the complete response
         developer.log('Response Status Code: ${response.statusCode}',
             name: 'BookingsRepository');
-        developer.log('Response Headers: ${response.headers}',
-            name: 'BookingsRepository');
         developer.log('Response Data: ${response.data}',
             name: 'BookingsRepository');
 
         if (response.statusCode == 200 || response.statusCode == 201) {
+
+          final bookingResponse = BookingResponseModel.fromJson(response.data);
+
+          // Save booking response to SharedPreferences
+         await SharedPreferencesHelper.saveBookingResponse(bookingResponse);
+
+          // Save booking reference and price to SharedPreferences
+          final bookingReference = response.data['bookingReference'] ?? '';
+          final bookingPrice = response.data['bookingPrice'] ?? '0';
+
+          await SharedPreferencesHelper.saveBookingData(
+            bookingReference: bookingReference,
+            bookingPrice: bookingPrice,
+          );
+
+          // Show success message
           if (context.mounted) {
             custom_snackbar.CustomSnackBar.showSuccess(
               context,
@@ -197,15 +212,13 @@ class BookingsRepository {
         developer.log('DioException in createBooking: ${e.message}',
             name: 'BookingsRepository', error: e);
 
-        // If it's a timeout error, verify if the booking was created
+        // Handle timeout errors
         if (e.type == DioErrorType.receiveTimeout ||
             e.type == DioErrorType.connectionTimeout ||
             e.type == DioErrorType.sendTimeout) {
-          // Wait a moment before checking
           await Future.delayed(const Duration(seconds: 2));
 
           try {
-            // Try to fetch recent bookings to verify if the booking was created
             final bookings = await fetchAllBookings(0);
             final recentBooking = bookings['open']?.firstWhere(
               (booking) =>

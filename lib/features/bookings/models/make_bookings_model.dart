@@ -38,7 +38,7 @@ class BookingRequestModel {
     return BookingRequestModel(
       phoneNumber: json['phone_number'] ?? '',
       userId: json['user_id'] ?? '',
-      bookingPrice: json['booking_price'] ?? '',
+      bookingPrice: json['booking_price'] ?? '0',
       bookingDays: json['booking_days'] ?? '',
       initialDeposit: json['initial_deposit'] ?? '',
       firstName: json['first_name'] ?? '',

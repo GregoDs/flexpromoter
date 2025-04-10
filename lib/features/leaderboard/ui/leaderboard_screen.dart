@@ -1,4 +1,5 @@
 import 'dart:math' show pi;
+import 'package:flexpromoter/features/leaderboard/ui/lb_shimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +8,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flexpromoter/features/leaderboard/cubit/leaderboard_cubit.dart';
 import 'package:flexpromoter/features/leaderboard/cubit/leaderboard_state.dart';
 import 'package:flexpromoter/features/leaderboard/repo/leaderboard_repository.dart';
+
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -185,11 +187,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   bloc: _leaderboardCubit,
                   builder: (context, state) {
                     if (state is LeaderboardLoading) {
-                      return Center(
-                        child: CircularProgressIndicator(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                      );
+                      return const LeaderboardShimmer();
                     } else if (state is LeaderboardError) {
                       return Center(
                         child: Text(

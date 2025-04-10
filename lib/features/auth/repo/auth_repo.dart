@@ -4,29 +4,29 @@ import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flexpromoter/utils/services/api_service.dart';
 
-
 class AuthRepo {
   final ApiService _apiService = ApiService();
 
-  //Instance of the userModel
   UserModel? _userModel;
 
   // Function to request OTP
   Future<Response> requestOtp(String phoneNumber) async {
     try {
-      // Build the endpoint URL
-      final String url =
-          "${dotenv.env["PROD_ENDPOINT_AUTH"]!}/promoter/send-otp";
+      final endpoint = dotenv.env["PROD_ENDPOINT_AUTH"];
+      if (endpoint == null) {
+        throw Exception("PROD_ENDPOINT_AUTH is not set in .env");
+      }
 
-      // Make the POST request
+      final String url = "$endpoint/promoter/send-otp";
+
       final response = await _apiService.post(
         url,
         data: {
           "phone_number": phoneNumber,
         },
-        requiresAuth: false, // No token required for requesting OTP
+        requiresAuth: false,
       );
-      //update the usermodel here
+
       _userModel = UserModel(
         token: "",
         user: User(
@@ -34,25 +34,30 @@ class AuthRepo {
           email: "",
           userType: 0,
           isVerified: 0,
-          phoneNumber: int.parse(phoneNumber), //Store the phoneNumber
+          phoneNumber: int.tryParse(phoneNumber) ?? 0,
         ),
       );
 
-      // Log the response
       print("OTP request succeeded: ${response.data}");
       return response;
     } on DioException catch (e) {
-      // Log the error
       print("OTP request failed: ${e.message}");
-      rethrow; // Rethrow the error to handle it in the calling function
+      rethrow;
+    } catch (e) {
+      print("Unexpected error during OTP request: $e");
+      rethrow;
     }
   }
 
   // Function to verify OTP
   Future<Response> verifyOtp(String phoneNumber, String otp) async {
     try {
-      final String url =
-          "${dotenv.env["PROD_ENDPOINT_AUTH"]!}/promoter/verify-otp";
+      final endpoint = dotenv.env["PROD_ENDPOINT_AUTH"];
+      if (endpoint == null) {
+        throw Exception("PROD_ENDPOINT_AUTH is not set in .env");
+      }
+
+      final String url = "$endpoint/promoter/verify-otp";
 
       final response = await _apiService.post(
         url,
@@ -63,33 +68,41 @@ class AuthRepo {
         requiresAuth: false,
       );
 
-      // Parse the response data
       final responseData = response.data["data"];
+      if (responseData == null || responseData["user"] == null) {
+        throw Exception("Invalid response data");
+      }
 
-      // Update the UserModel with the response data
       _userModel = UserModel(
-        token: responseData["token"],
+        token: responseData["token"] ?? "",
         user: User(
-          id: responseData["user"]["id"],
-          email: responseData["user"]["email"],
-          userType: responseData["user"]["user_type"],
-          isVerified: responseData["user"]["is_verified"],
-          phoneNumber: responseData["user"]["phone_number"],
+          id: responseData["user"]["id"] ?? 0,
+          email: responseData["user"]["email"] ?? "",
+          userType: responseData["user"]["user_type"] ?? 0,
+          isVerified: responseData["user"]["is_verified"] ?? 0,
+          phoneNumber: responseData["user"]["phone_number"] ?? 0,
         ),
       );
 
-      // In your auth flow
-      final userModel = UserModel.fromJson(response.data);
       await SharedPreferencesHelper.saveUserData(response.data);
+      await SharedPreferencesHelper.saveToken(responseData["token"] ?? "");
 
       print("OTP verification succeeded: ${response.data}");
       return response;
     } on DioException catch (e) {
       print("OTP verification failed: ${e.message}");
       rethrow;
+    } catch (e) {
+      print("Unexpected error during OTP verification: $e");
+      rethrow;
     }
   }
 
-  //Getter for the UserModel
   UserModel? get userModel => _userModel;
+}
+
+// Logout function
+Future<void> logout() async {
+  await SharedPreferencesHelper.clearToken();
+  await SharedPreferencesHelper.clearUserData();
 }

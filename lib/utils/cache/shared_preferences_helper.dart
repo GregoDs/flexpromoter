@@ -1,32 +1,46 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flexpromoter/features/bookings/models/booking_response_model.dart';
 
 class SharedPreferencesHelper {
   static const String _tokenKey = 'token';
   static const String _userDataKey = 'user_data';
+  static const String _bookingResponseKey = 'booking_response';
+  static const String _bookingReferenceKey = 'booking_reference';
+  static const String _validatedAmountKey = 'validated_amount';
 
-  // Get token from SharedPreferences
-  static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(_tokenKey);
-    print("Token retrieved: $token"); // Log the retrieved token
-    return token;
-  }
+ // Token Handling
 
-  // Save token to SharedPreferences
-  static Future<void> saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-    print("Token saved: $token"); // Log the saved token
-  }
+static Future<void> saveToken(String token) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(_tokenKey, token);
+  await prefs.setBool('isLoggedIn', true);
+}
 
-  // Clear token from SharedPreferences
-  static Future<void> clearToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    print("Token cleared"); // Log the token clearance
-  }
+static Future<String?> getToken() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString(_tokenKey);
+}
 
+static Future<void> clearToken() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove(_tokenKey);
+  await prefs.setBool('isLoggedIn', false);
+}
+
+static Future<void> logout() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove(_tokenKey);
+  await prefs.remove(_userDataKey);
+  await prefs.remove(_bookingReferenceKey);
+  await prefs.remove(_validatedAmountKey);
+  await prefs.remove(_bookingResponseKey);
+  await prefs.setBool('isLoggedIn', false);
+
+  print("User successfully logged out");
+}
+
+  // User Data Handling
   static Future<void> saveUserData(Map<String, dynamic> userData) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userDataKey, jsonEncode(userData));
@@ -40,6 +54,7 @@ class SharedPreferencesHelper {
     try {
       return jsonDecode(userDataString) as Map<String, dynamic>;
     } catch (e) {
+      print("Failed to decode user data: $e");
       return null;
     }
   }
@@ -48,5 +63,55 @@ class SharedPreferencesHelper {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_userDataKey);
+  }
+
+  // Booking Data Handling
+  static Future<void> saveBookingData({
+    required String bookingReference,
+    required String bookingPrice,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_bookingReferenceKey, bookingReference);
+    await prefs.setString(_validatedAmountKey, bookingPrice);
+    print("Booking data saved - Reference: $bookingReference, Price: $bookingPrice");
+  }
+
+  static Future<String?> getBookingReference() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_bookingReferenceKey);
+  }
+
+  static Future<String?> getBookingPrice() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_validatedAmountKey);
+  }
+
+  static Future<void> saveBookingResponse(BookingResponseModel response) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_bookingResponseKey, jsonEncode(response.toJson()));
+    print("Full booking response saved");
+  }
+
+  static Future<BookingResponseModel?> getBookingResponse() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_bookingResponseKey);
+
+    if (jsonString != null) {
+      try {
+        final jsonMap = jsonDecode(jsonString);
+        return BookingResponseModel.fromJson(jsonMap);
+      } catch (e) {
+        print("Failed to decode booking response: $e");
+      }
+    }
+    return null;
+  }
+
+  static Future<void> clearBookingData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_bookingReferenceKey);
+    await prefs.remove(_validatedAmountKey);
+    await prefs.remove(_bookingResponseKey);
+    print("Booking data cleared");
   }
 }
