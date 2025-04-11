@@ -178,7 +178,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             children: [
               Lottie.asset(
                 "assets/images/leaderboard.json",
-                height: MediaQuery.of(context).size.height * 0.22,
+                height: MediaQuery.of(context).size.height * 0.24,
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 5),

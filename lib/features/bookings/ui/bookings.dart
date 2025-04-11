@@ -6,6 +6,7 @@ import 'package:flexpromoter/features/bookings/cubit/bookings_cubit.dart';
 import 'package:flexpromoter/features/bookings/cubit/bookings_state.dart';
 import 'package:flexpromoter/features/bookings/models/bookings_model.dart';
 import 'package:flexpromoter/features/bookings/ui/booking_details.dart';
+import 'package:flexpromoter/features/bookings/ui/booking_shimmer.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -111,11 +112,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
             child: BlocBuilder<BookingsCubit, BookingsState>(
               builder: (context, state) {
                 if (state is BookingsLoading) {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                    ),
-                  );
+                  return const BookingsShimmer(isDarkMode: true);
                 }
 
                 if (state is BookingsLoaded) {

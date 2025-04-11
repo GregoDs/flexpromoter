@@ -11,7 +11,6 @@ import '../models/validate_model.dart';
 import '../repo/home_repo.dart';
 import 'package:lottie/lottie.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -123,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 BlendMode.srcIn,
                               ),
                               child: Image.asset(
-                                'assets/icon/flexlogo3.png',
+                                'assets/icon/flexhomelogo.png',
                                 height: 60.h,
                                 fit: BoxFit.contain,
                               ),
@@ -281,44 +280,76 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                                       ),
                                                     ),
                                                   )
-                                                :IconButton(
-                                              onPressed: () async {
-                                                if (_receiptController.text.isNotEmpty) {
-                                                  // Get saved booking reference and price
-                                                  final bookingReference = await SharedPreferencesHelper.getBookingReference();
-                                                  final bookingPrice = await SharedPreferencesHelper.getBookingPrice();
+                                                : IconButton(
+                                                    onPressed: () async {
+                                                      if (_receiptController
+                                                          .text.isNotEmpty) {
+                                                        // Get saved booking reference and price
+                                                        final bookingReference =
+                                                            await SharedPreferencesHelper
+                                                                .getBookingReference();
+                                                        final bookingPrice =
+                                                            await SharedPreferencesHelper
+                                                                .getBookingPrice();
 
-                                                  // Send to cubit
-                                                  context.read<ValidateReceiptCubit>().validateReceipt(
-                                                    ValidateReceiptModel(
-                                                      slipNo: _receiptController.text,
-                                                      bookingReference: bookingReference ?? '',
-                                                      bookingPrice: bookingPrice ?? '',
+                                                        // Send to cubit
+                                                        context
+                                                            .read<
+                                                                ValidateReceiptCubit>()
+                                                            .validateReceipt(
+                                                              ValidateReceiptModel(
+                                                                slipNo:
+                                                                    _receiptController
+                                                                        .text,
+                                                                bookingReference:
+                                                                    bookingReference ??
+                                                                        '',
+                                                                bookingPrice:
+                                                                    bookingPrice ??
+                                                                        '',
+                                                              ),
+                                                            );
+
+                                                        // Clear the text field after submission
+                                                        // _receiptController
+                                                        //     .clear();
+                                                      }
+                                                    },
+                                                    icon: Icon(
+                                                      Icons.send,
+                                                      color: isDarkMode
+                                                          ? Colors.white
+                                                              .withOpacity(0.5)
+                                                          : ColorName
+                                                              .primaryColor,
+                                                      size: 20.sp,
                                                     ),
-                                                  );
-                                                }
-                                              },
-                                              icon: Icon(
-                                                Icons.send,
-                                                color: isDarkMode
-                                                    ? Colors.white.withOpacity(0.5)
-                                                    : ColorName.primaryColor,
-                                                size: 20.sp,
-                                              ),
-                                            ),
+                                                  ),
                                           ),
                                           onSubmitted: (value) async {
                                             if (value.isNotEmpty) {
-                                              final bookingReference = await SharedPreferencesHelper.getBookingReference();
-                                              final bookingPrice = await SharedPreferencesHelper.getBookingPrice();
+                                              final bookingReference =
+                                                  await SharedPreferencesHelper
+                                                      .getBookingReference();
+                                              final bookingPrice =
+                                                  await SharedPreferencesHelper
+                                                      .getBookingPrice();
 
-                                              context.read<ValidateReceiptCubit>().validateReceipt(
-                                                ValidateReceiptModel(
-                                                  slipNo: value,
-                                                  bookingReference: bookingReference ?? '',
-                                                  bookingPrice: bookingPrice ?? '',
-                                                ),
-                                              );
+                                              context
+                                                  .read<ValidateReceiptCubit>()
+                                                  .validateReceipt(
+                                                    ValidateReceiptModel(
+                                                      slipNo: value,
+                                                      bookingReference:
+                                                          bookingReference ??
+                                                              '',
+                                                      bookingPrice:
+                                                          bookingPrice ?? '',
+                                                    ),
+                                                  );
+
+                                              // Clear the text field after submission
+                                              _receiptController.clear();
                                             }
                                           },
                                         );
@@ -354,7 +385,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     children: [
                                       _buildAnimatedStatCard(
                                         "Commissions",
-                                        "10",
+                                        "2",
                                         ColorName.primaryColor,
                                         Icons.attach_money_rounded,
                                         0,
@@ -362,7 +393,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       SizedBox(width: 12.w),
                                       _buildAnimatedStatCard(
                                         "View Bookings",
-                                        "4",
+                                        "15",
                                         Colors.black87,
                                         Icons.calendar_month_rounded,
                                         1,
@@ -370,7 +401,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       SizedBox(width: 12.w),
                                       _buildAnimatedStatCard(
                                         "LeaderBoard",
-                                        "12",
+                                        "5",
                                         Colors.amber,
                                         Icons.leaderboard_rounded,
                                         2,

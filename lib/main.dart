@@ -1,25 +1,26 @@
 import 'package:flexpromoter/features/onboarding/splash_screen.dart';
 import 'package:flutter/services.dart';
-
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'exports.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
   await dotenv.load(fileName: ".env");
+
   runApp(const OverlaySupport.global(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
       builder: (context, child) {
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value: const SystemUiOverlayStyle(
-            //statusBarColor: ColorName.primaryColor,
             statusBarIconBrightness: Brightness.light,
             statusBarBrightness: Brightness.light,
           ),
@@ -38,7 +39,8 @@ class MyApp extends StatelessWidget {
             ),
             themeMode: ThemeMode.system,
             routes: AppRoutes.routes,
-            home: const SplashScreen(),
+            home: const StartupRedirector(),
+            // home: const SplashScreen(),
           ),
         );
       },

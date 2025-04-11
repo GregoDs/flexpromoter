@@ -2,9 +2,8 @@ import 'package:flexpromoter/exports.dart';
 import 'package:flexpromoter/features/commissions/cubit/commissions_cubit.dart';
 import 'package:flexpromoter/features/commissions/repo/commission_repo.dart';
 import 'package:flexpromoter/utils/constants/sizes.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'comm_shimmer.dart'; // Import the shimmer widget
 
 class Commissions extends StatefulWidget {
   const Commissions({super.key});
@@ -90,7 +89,7 @@ class _CommissionsState extends State<Commissions> {
                         _buildFilterTab(isDarkMode),
                         const SizedBox(height: 20),
                         if (state is CommissionsLoading)
-                          const Center(child: CircularProgressIndicator())
+                          const CommissionsShimmer(isDarkMode: true,) // Use shimmer loading rows
                         else if (state is CommissionsSuccess)
                           _buildCommissionsAndDeficit(state, isDarkMode)
                         else if (state is CommissionsError)

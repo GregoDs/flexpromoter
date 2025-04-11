@@ -107,7 +107,7 @@ class _SideMenuState extends State<SideMenu> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Image.asset(
-                'assets/icon/flexlogo3.png',
+                'assets/icon/flexhomelogo.png',
                 height: 50.h,
                 color: Colors.white,
               ),
