@@ -3,7 +3,7 @@ flutter_native_splash:
   ios: true
   fullscreen: true
 
-  color: "#ffffff"
+  color: "#FFFFFF"
   image: "assets/icon/ioslogo.png"
   color_dark: "#1A1A1A"
   image_dark: "assets/icon/logo.png"
