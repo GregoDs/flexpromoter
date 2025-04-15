@@ -1,4 +1,5 @@
-import 'package:flexpromoter/features/auth/repo/auth_repo.dart' as SharedPreferencesHelper;
+import 'package:flexpromoter/features/auth/repo/auth_repo.dart'
+    as SharedPreferencesHelper;
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -249,12 +250,12 @@ class _SideMenuState extends State<SideMenu> {
               ),
               child: ListTile(
                 onTap: () async {
-                        await SharedPreferencesHelper.logout();
-                        if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, Routes.login);
-                        }
-                      },
-                 leading: Icon(
+                  await SharedPreferencesHelper.logout();
+                  if (context.mounted) {
+                    Navigator.pushReplacementNamed(context, Routes.login);
+                  }
+                },
+                leading: Icon(
                   CupertinoIcons.power,
                   color: Colors.white,
                   size: 24.sp,

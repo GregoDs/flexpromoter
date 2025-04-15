@@ -521,7 +521,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     ),
                                     // Image Overlay
                                     Positioned(
-                                      right: -90.w,
+                                      right: -130.w,
                                       top: -60.h,
                                       child: Image.asset(
                                         'assets/images/Background.png',

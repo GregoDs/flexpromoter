@@ -84,6 +84,16 @@ class BookingsRepository {
             name: 'BookingsRepository');
       }
 
+      // Save fetched bookings to SharedPreferences
+      // await SharedPreferencesHelper.saveBookings(
+      //     result['open']!); // Save open bookings
+      await SharedPreferencesHelper.saveClosedBookings(
+          result['closed']!); // Save closed bookings
+      // await SharedPreferencesHelper.saveBookings(
+      //     result['redeemed']!); // Save redeemed bookings
+      // await SharedPreferencesHelper.saveBookings(
+      //     result['unserviced']!); // Save unserviced bookings
+
       return result;
     } catch (e) {
       developer.log('Error fetching bookings: $e',
@@ -182,11 +192,10 @@ class BookingsRepository {
             name: 'BookingsRepository');
 
         if (response.statusCode == 200 || response.statusCode == 201) {
-
           final bookingResponse = BookingResponseModel.fromJson(response.data);
 
           // Save booking response to SharedPreferences
-         await SharedPreferencesHelper.saveBookingResponse(bookingResponse);
+          await SharedPreferencesHelper.saveBookingResponse(bookingResponse);
 
           // Save booking reference and price to SharedPreferences
           final bookingReference = response.data['bookingReference'] ?? '';

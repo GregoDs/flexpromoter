@@ -11,55 +11,60 @@ class HomeRepo {
     required String slipNo,
   }) async {
     try {
-      // Get the stored user data
+      // Get stored user data
       final userData = await SharedPreferencesHelper.getUserData();
-      if (userData == null) {
-        throw Exception('User data not found. Please login again.');
-      }
+      if (userData == null) throw Exception('User data not found. Please login again.');
 
-      // Parse user ID
       final userModel = UserModel.fromJson(userData);
       final localUserId = userModel.user.id.toString();
 
       developer.log('User ID loaded from SharedPreferences: $localUserId');
 
-      // Retrieve the booking response from SharedPreferences
+      // Get booking response
       final bookingResponse = await SharedPreferencesHelper.getBookingResponse();
-      if (bookingResponse == null) {
-        throw Exception('Booking response not found. Please make a booking.');
+
+      String? bookingReference = bookingResponse?.data?.productBooking?.bookingReference;
+      String? bookingPrice = bookingResponse?.data?.productBooking?.bookingPrice?.toString();
+
+      // If either value is missing, fallback to closed bookings
+      if ((bookingReference == null || bookingReference.isEmpty) ||
+          (bookingPrice == null || bookingPrice.isEmpty)) {
+        developer.log('Fallback: Getting booking data from closed bookings...');
+
+        final closedBookings = await SharedPreferencesHelper.loadClosedBookings();
+
+        if (closedBookings.isEmpty) {
+          throw Exception('No closed booking data found.');
+        }
+
+        final firstBooking = closedBookings[0];
+
+        bookingReference = firstBooking.bookingReference;
+        bookingPrice = firstBooking.bookingPrice?.toString();
+
+        if (bookingReference == null || bookingReference.isEmpty) {
+          throw Exception('Booking reference is required.');
+        }
+
+        if (bookingPrice == null || bookingPrice.isEmpty) {
+          throw Exception('Booking price is required.');
+        }
       }
 
-      // Extract the booking reference and price from the booking response
-      final bookingReference = bookingResponse.data?.productBooking?.bookingReference;
-      final bookingPrice = bookingResponse.data?.productBooking?.bookingPrice.toString(); // Ensure it's a string
+      developer.log('Booking data used - Reference: $bookingReference, Price: $bookingPrice');
 
-      if (bookingReference == null || bookingReference.isEmpty) {
-        throw Exception('Booking reference is required.');
-      }
-      if (bookingPrice == null || bookingPrice.isEmpty) {
-        throw Exception('Booking price is required.');
-      }
+      final requestData = {
+        'user_id': localUserId,
+        'booking_reference': bookingReference,
+        'slip_no': slipNo,
+        'validated_amount': bookingPrice,
+      };
 
-      developer.log(
-        'Booking data loaded - Reference: $bookingReference, Price: $bookingPrice',
-      );
+      developer.log('Sending validation request with data: $requestData');
 
-      developer.log('Sending validation request with data: {'
-          '"user_id": $localUserId, '
-          '"booking_reference": $bookingReference, '
-          '"slip_no": $slipNo, '
-          '"validated_amount": $bookingPrice'
-          '}');
-
-      // Send the validation request
       final response = await _apiService.post(
         '${ApiService.prodEndpointBookings}/promoters/validate-receipt',
-        data: {
-          'user_id': localUserId,
-          'booking_reference': bookingReference,
-          'slip_no': slipNo,
-          'validated_amount': bookingPrice,
-        },
+        data: requestData,
       );
 
       developer.log('Validation Response: ${response.data}');
@@ -67,7 +72,7 @@ class HomeRepo {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data;
       } else {
-        throw Exception('Failed to validate receipt');
+        throw Exception(response.data['message']);
       }
     } catch (e) {
       developer.log('Error during receipt validation: $e');

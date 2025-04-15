@@ -72,8 +72,33 @@ class Booking {
               ?.map((payment) => Payment.fromJson(payment))
               .toList() ??
           [],
-         
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'booking_reference': bookingReference,
+      'booking_price': bookingPrice,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+      'booking_status': bookingStatus,
+      'product_id': productId,
+      'outlet_id': outletId,
+      'user_id': userId,
+      'total_payments': totalPayments,
+      'booking_interest': bookingInterest,
+      'interest_amount': interestAmount,
+      'maturity_date': maturityDate,
+      'target_saving': targetSaving,
+      'chama_description': chamaDescription,
+      'image': image,
+      'progress': progress,
+      'customer': customer.toJson(),
+      'product': product.toJson(),
+      'outlet': outlet.toJson(),
+      'payment': payment.map((p) => p.toJson()).toList(),
+    };
   }
 }
 
@@ -159,6 +184,35 @@ class Customer {
       isFlexsaveCustomer: json['is_flexsave_customer'] ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'country_id': countryId,
+      'user_id': userId,
+      'referral_id': referralId,
+      'first_name': firstName,
+      'last_name': lastName,
+      'phone_number_1': phoneNumber1,
+      'mpesa_customer_id': mpesaCustomerId,
+      'phone_number_2': phoneNumber2,
+      'id_number': idNumber,
+      'passport_number': passportNumber,
+      'dob': dob,
+      'gender': gender,
+      'country': country,
+      'customer_longitude': customerLongitude,
+      'customer_latitude': customerLatitude,
+      'pin': pin,
+      'deleted_at': deletedAt,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+      'stripe_customer_id': stripeCustomerId,
+      'score_has_been_computed': scoreHasBeenComputed,
+      'referral_code': referralCode,
+      'is_flexsave_customer': isFlexsaveCustomer,
+    };
+  }
 }
 
 //Product Model
@@ -186,6 +240,16 @@ class Product {
       chamaDescription: json['chama_description'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'product_name': productName,
+      'maturity_date': maturityDate,
+      'target_saving': targetSaving,
+      'chama_description': chamaDescription,
+    };
+  }
 }
 
 //Outlet Model
@@ -203,6 +267,13 @@ class Outlet {
       id: json['id'] ?? 0,
       outletName: json['outlet_name'] ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'outlet_name': outletName,
+    };
   }
 }
 
@@ -227,5 +298,14 @@ class Payment {
       paymentAmount: json['payment_amount'] ?? 0,
       createdAt: json['created_at'] ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'booking_id': bookingId,
+      'payment_amount': paymentAmount,
+      'created_at': createdAt,
+    };
   }
 }
