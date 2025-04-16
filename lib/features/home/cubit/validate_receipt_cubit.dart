@@ -33,15 +33,15 @@ class ValidateReceiptCubit extends Cubit<ValidateReceiptState> {
 
     emit(ValidateReceiptSuccess(response));
   } catch (e) {
-    developer.log('Error validating receipt: $e');
+  developer.log('Error validating receipt: $e');
 
-    CustomSnackBar.showError(
-      context,
-      title: 'Error',
-      message: 'Validation failed. Please try again.',
-    );
+  CustomSnackBar.showError(
+    context,
+    title: 'Error',
+    message: e.toString().replaceAll('Exception: ', ''),
+  );
 
-    emit(ValidateReceiptError(e.toString()));
-  }
+  emit(ValidateReceiptError(e.toString()));
+}
 }
 }
