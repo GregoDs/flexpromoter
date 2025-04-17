@@ -9,7 +9,6 @@ import 'package:flexpromoter/features/leaderboard/cubit/leaderboard_cubit.dart';
 import 'package:flexpromoter/features/leaderboard/cubit/leaderboard_state.dart';
 import 'package:flexpromoter/features/leaderboard/repo/leaderboard_repository.dart';
 
-
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
 
@@ -199,6 +198,22 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         ),
                       );
                     } else if (state is LeaderboardLoaded) {
+                      if (state.leaderboardData.isEmpty) {
+                        return Column(
+                          children: [
+                            Text(
+                              'Lacking data from our server...kindly check later',
+                              style: GoogleFonts.montserrat(
+                                color: textColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Expanded(child: LeaderboardShimmer()),
+                          ],
+                                            );
+                       }
                       return ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: state.leaderboardData.length,

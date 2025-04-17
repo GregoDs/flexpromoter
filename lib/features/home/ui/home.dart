@@ -206,160 +206,147 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
                           SizedBox(height: 24.h),
 
-                          // Search Bar Section
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w),
-                            child: Container(
-                              height: 52.h,
-                              decoration: BoxDecoration(
+                          // Search Bar Section - Enhanced
+Padding(
+  padding: EdgeInsets.symmetric(horizontal: 20.w),
+  child: AnimatedContainer(
+    duration: Duration(milliseconds: 500),
+    curve: Curves.easeInOut,
+    height: 60.h,
+    decoration: BoxDecoration(
+      gradient: isDarkMode
+          ? LinearGradient(
+              colors: [Colors.white.withOpacity(0.08), Colors.white.withOpacity(0.04)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            )
+          : LinearGradient(
+              colors: [ColorName.primaryColor.withOpacity(0.08), Colors.white],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+      borderRadius: BorderRadius.circular(18.r),
+      border: Border.all(
+        color: isDarkMode ? Colors.white.withOpacity(0.1) : ColorName.primaryColor.withOpacity(0.4),
+        width: 1.2,
+      ),
+      boxShadow: [
+        if (!isDarkMode)
+          BoxShadow(
+            color: ColorName.primaryColor.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+          
+      ],
+    ),
+    child: Row(
+      children: [
+        Padding(
+          padding: EdgeInsets.only(left: 16.w),
+          child: Icon(
+            Icons.receipt_long_rounded,
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.7)
+                : ColorName.primaryColor,
+            size: 26.sp,
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: BlocBuilder<ValidateReceiptCubit, ValidateReceiptState>(
+            builder: (context, state) {
+              return TextField(
+                controller: _receiptController,
+                style: AppText.medium(
+                  "",
+                  fontSize: 16.sp,
+                  color: isDarkMode
+                      ? ColorName.whiteColor
+                      : ColorName.blackColor,
+                ).style,
+                decoration: InputDecoration(
+                  hintText: "Validate Receipt number here",
+                  hintStyle: AppText.small(
+                    "",
+                    fontSize: 15.sp,
+                    color: isDarkMode
+                        ? Colors.white.withOpacity(0.4)
+                        : ColorName.primaryColor.withOpacity(0.6),
+                    fontWeight: FontWeight.w500,
+                  ).style,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 18.h),
+                  suffixIcon: state is ValidateReceiptLoading
+                      ? Padding(
+                          padding: EdgeInsets.only(right: 12.w),
+                          child: SizedBox(
+                            width: 20.w,
+                            height: 20.h,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
                                 color: isDarkMode
-                                    ? Colors.white.withOpacity(0.05)
-                                    : Colors.grey.shade50,
-                                borderRadius: BorderRadius.circular(16.r),
-                                border: Border.all(
-                                  color: isDarkMode
-                                      ? Colors.white.withOpacity(0.1)
-                                      : Colors.grey.shade200,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 16.w),
-                                    child: Icon(
-                                      Icons.search,
-                                      color: isDarkMode
-                                          ? Colors.white.withOpacity(0.5)
-                                          : Colors.grey.shade400,
-                                      size: 24.sp,
-                                    ),
-                                  ),
-                                  SizedBox(width: 12.w),
-                                  Expanded(
-                                    child: BlocBuilder<ValidateReceiptCubit,
-                                        ValidateReceiptState>(
-                                      builder: (context, state) {
-                                        return TextField(
-                                          controller: _receiptController,
-                                          style: AppText.medium(
-                                            "",
-                                            fontSize: 16.sp,
-                                            color: isDarkMode
-                                                ? ColorName.whiteColor
-                                                : ColorName.blackColor,
-                                          ).style,
-                                          decoration: InputDecoration(
-                                            hintText:
-                                                "Enter receipt number to validate",
-                                            hintStyle: AppText.small(
-                                              "",
-                                              fontSize: 16.sp,
-                                              color: isDarkMode
-                                                  ? Colors.white
-                                                      .withOpacity(0.3)
-                                                  : Colors.grey.shade400,
-                                            ).style,
-                                            border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                    vertical: 16.h),
-                                            suffixIcon: state
-                                                    is ValidateReceiptLoading
-                                                ? SizedBox(
-                                                    width: 20.w,
-                                                    height: 20.h,
-                                                    child: Center(
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                        color: isDarkMode
-                                                            ? Colors.white
-                                                            : ColorName
-                                                                .primaryColor,
-                                                      ),
-                                                    ),
-                                                  )
-                                                : IconButton(
-                                                    onPressed: () async {
-                                                      if (_receiptController
-                                                          .text.isNotEmpty) {
-                                                        // Get saved booking reference and price
-                                                        final bookingReference =
-                                                            await SharedPreferencesHelper
-                                                                .getBookingReference();
-                                                        final bookingPrice =
-                                                            await SharedPreferencesHelper
-                                                                .getBookingPrice();
-
-                                                        // Send to cubit
-                                                        context
-                                                            .read<
-                                                                ValidateReceiptCubit>()
-                                                            .validateReceipt(
-                                                              ValidateReceiptModel(
-                                                                slipNo:
-                                                                    _receiptController
-                                                                        .text,
-                                                                bookingReference:
-                                                                    bookingReference ??
-                                                                        '',
-                                                                bookingPrice:
-                                                                    bookingPrice ??
-                                                                        '',
-                                                              ),
-                                                            );
-
-                                                        // Clear the text field after submission
-                                                        // _receiptController
-                                                        //     .clear();
-                                                      }
-                                                    },
-                                                    icon: Icon(
-                                                      Icons.send,
-                                                      color: isDarkMode
-                                                          ? Colors.white
-                                                              .withOpacity(0.5)
-                                                          : ColorName
-                                                              .primaryColor,
-                                                      size: 20.sp,
-                                                    ),
-                                                  ),
-                                          ),
-                                          onSubmitted: (value) async {
-                                            if (value.isNotEmpty) {
-                                              final bookingReference =
-                                                  await SharedPreferencesHelper
-                                                      .getBookingReference();
-                                              final bookingPrice =
-                                                  await SharedPreferencesHelper
-                                                      .getBookingPrice();
-
-                                              context
-                                                  .read<ValidateReceiptCubit>()
-                                                  .validateReceipt(
-                                                    ValidateReceiptModel(
-                                                      slipNo: value,
-                                                      bookingReference:
-                                                          bookingReference ??
-                                                              '',
-                                                      bookingPrice:
-                                                          bookingPrice ?? '',
-                                                    ),
-                                                  );
-
-                                              // Clear the text field after submission
-                                              _receiptController.clear();
-                                            }
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
+                                    ? Colors.white
+                                    : ColorName.primaryColor,
                               ),
                             ),
                           ),
+                        )
+                      : IconButton(
+                          onPressed: () async {
+                            if (_receiptController.text.isNotEmpty) {
+                              final bookingReference =
+                                  await SharedPreferencesHelper
+                                      .getBookingReference();
+                              final bookingPrice =
+                                  await SharedPreferencesHelper
+                                      .getBookingPrice();
+
+                              context.read<ValidateReceiptCubit>().validateReceipt(
+                                    ValidateReceiptModel(
+                                      slipNo: _receiptController.text,
+                                      bookingReference: bookingReference ?? '',
+                                      bookingPrice: bookingPrice ?? '',
+                                    ),
+                                  );
+                            }
+                          },
+                          icon: Icon(
+                            Icons.send,
+                            color: isDarkMode
+                                ? Colors.white
+                                : ColorName.primaryColor,
+                            size: 24.sp,
+                          ),
+                        ),
+                ),
+                onSubmitted: (value) async {
+                  if (value.isNotEmpty) {
+                    final bookingReference =
+                        await SharedPreferencesHelper.getBookingReference();
+                    final bookingPrice =
+                        await SharedPreferencesHelper.getBookingPrice();
+
+                    context.read<ValidateReceiptCubit>().validateReceipt(
+                          ValidateReceiptModel(
+                            slipNo: value,
+                            bookingReference: bookingReference ?? '',
+                            bookingPrice: bookingPrice ?? '',
+                          ),
+                        );
+
+                    _receiptController.clear();
+                  }
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    ),
+  ),
+),
 
                           SizedBox(height: 24.h),
 

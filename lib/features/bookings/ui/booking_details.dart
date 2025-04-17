@@ -121,12 +121,17 @@ class BookingDetailScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            booking.product.productName,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: isDarkMode ? Colors.white : Colors.black,
+                          Expanded(
+                            child: Text(
+                              booking.product.productName,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: isDarkMode ? Colors.white : Colors.black,
+                              ),
+                              softWrap: true,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Icon(
@@ -293,19 +298,29 @@ class BookingDetailScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.6),
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.6),
+              ),
+              softWrap: true,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Text(
-            value,
-            style: GoogleFonts.montserrat(
-              fontSize: 14,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              softWrap: true,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
