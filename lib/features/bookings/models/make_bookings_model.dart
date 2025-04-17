@@ -36,14 +36,14 @@ class BookingRequestModel {
   // Factory constructor to create a BookingRequestModel from JSON
   factory BookingRequestModel.fromJson(Map<String, dynamic> json) {
     return BookingRequestModel(
-      phoneNumber: json['phone_number'] ?? '',
-      userId: json['user_id'] ?? '',
-      bookingPrice: json['booking_price'] ?? '0',
-      bookingDays: json['booking_days'] ?? '',
-      initialDeposit: json['initial_deposit'] ?? '',
-      firstName: json['first_name'] ?? '',
-      lastName: json['last_name'] ?? '',
-      productName: json['product_name'] ?? '',
+      phoneNumber: json['phone_number']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      bookingPrice: json['booking_price']?.toString() ?? '0',
+      bookingDays: json['booking_days']?.toString() ?? '0',
+      initialDeposit: json['initial_deposit']?.toString() ?? '0',
+      firstName: json['first_name']?.toString() ?? '',
+      lastName: json['last_name']?.toString() ?? '',
+      productName: json['product_name']?.toString() ?? '',
     );
   }
 }

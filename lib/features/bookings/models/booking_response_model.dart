@@ -114,36 +114,36 @@ class ProductBooking {
   });
 
   factory ProductBooking.fromJson(Map<String, dynamic> json) {
-    return ProductBooking(
-      productId: json['product_id'] ?? 0,
-      userId: json['user_id'] ?? 0,
-      merchantId: json['merchant_id'] ?? 0,
-      promoterId: json['promoter_id'] ?? 0,
-      bookingOnCredit: json['booking_on_credit'] ?? 0,
-      outletId: json['outlet_id'] ?? 0,
-      bookingPrice: json['booking_price'] ?? '',
-      bookingOfferPrice: json['booking_offer_price'] ?? '',
-      initialDeposit: json['initial_deposit'] ?? '',
-      referralCoupon: json['referral_coupon'] ?? '',
-      bookingSource: json['booking_source'] ?? '',
-      deadlineDate: json['deadline_date'] ?? '',
-      bookingReference: json['booking_reference'] ?? '',
-      frequency: json['frequency'],
-      frequencyContribution: json['frequency_contribution'],
-      updatedAt: json['updated_at'] ?? '',
-      createdAt: json['created_at'] ?? '',
-      id: json['id'] ?? 0,
-      user: BookingUser.fromJson(json['user'] ?? {}),
-      bookingInterest: json['booking_interest'] ?? [],
-      interestAmount: json['interest_amount'] ?? 0,
-      maturityDate: json['maturity_date'] ?? '',
-      targetSaving: json['target_saving'] ?? '',
-      chamaDescription: json['chama_description'],
-      image: json['image'],
-      progress: json['progress'] ?? 0,
-      payment: json['payment'] ?? [],
-    );
-  }
+  return ProductBooking(
+    productId: json['product_id'] ?? 0,
+    userId: json['user_id'] ?? 0,
+    merchantId: json['merchant_id'] ?? 0,
+    promoterId: json['promoter_id'] ?? 0,
+    bookingOnCredit: json['booking_on_credit'] ?? 0,
+    outletId: json['outlet_id'] ?? 0,
+    bookingPrice: json['booking_price']?.toString() ?? '0',
+    bookingOfferPrice: json['booking_offer_price']?.toString() ?? '0',
+    initialDeposit: json['initial_deposit']?.toString() ?? '0',
+    referralCoupon: json['referral_coupon']?.toString() ?? '',
+    bookingSource: json['booking_source']?.toString() ?? '',
+    deadlineDate: json['deadline_date']?.toString() ?? '',
+    bookingReference: json['booking_reference']?.toString() ?? '',
+    frequency: json['frequency']?.toString(),
+    frequencyContribution: json['frequency_contribution']?.toString(),
+    updatedAt: json['updated_at']?.toString() ?? '',
+    createdAt: json['created_at']?.toString() ?? '',
+    id: json['id'] ?? 0,
+    user: BookingUser.fromJson(json['user'] ?? {}),
+    bookingInterest: json['booking_interest'] ?? [],
+    interestAmount: json['interest_amount'] ?? 0,
+    maturityDate: json['maturity_date']?.toString() ?? '',
+    targetSaving: json['target_saving']?.toString() ?? '0',
+    chamaDescription: json['chama_description']?.toString(),
+    image: json['image']?.toString(),
+    progress: json['progress'] ?? 0,
+    payment: json['payment'] ?? [],
+  );
+}
 
   Map<String, dynamic> toJson() {
     return {
@@ -191,17 +191,17 @@ class BookingUser {
   });
 
   factory BookingUser.fromJson(Map<String, dynamic> json) {
-    return BookingUser(
-      id: json['id'] ?? 0,
-      userId: json['user_id'] ?? 0,
-      referralId: json['referral_id'],
-      firstName: json['first_name'] ?? '',
-      lastName: json['last_name'] ?? '',
-      phoneNumber: json['phone_number_1'] ?? '',
-      idNumber: json['id_number'],
-      passportNumber: json['passport_number'],
-      dob: json['dob'],
-      country: json['country'],
-    );
-  }
+  return BookingUser(
+    id: json['id'] ?? 0,
+    userId: json['user_id'] ?? 0,
+    referralId: json['referral_id']?.toString(),
+    firstName: json['first_name']?.toString() ?? '',
+    lastName: json['last_name']?.toString() ?? '',
+    phoneNumber: json['phone_number_1']?.toString() ?? '',
+    idNumber: json['id_number']?.toString(),
+    passportNumber: json['passport_number']?.toString(),
+    dob: json['dob']?.toString(),
+    country: json['country']?.toString(),
+  );
+}
 }
