@@ -222,9 +222,9 @@ class BookingsRepository {
             name: 'BookingsRepository', error: e);
 
         // Handle timeout errors
-        if (e.type == DioErrorType.receiveTimeout ||
-            e.type == DioErrorType.connectionTimeout ||
-            e.type == DioErrorType.sendTimeout) {
+        if (e.type == DioExceptionType.receiveTimeout ||
+            e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.sendTimeout) {
           await Future.delayed(const Duration(seconds: 2));
 
           try {
@@ -257,7 +257,7 @@ class BookingsRepository {
         if (context.mounted) {
           String errorMessage =
               'An error occurred while creating the booking. ';
-          if (e.type == DioErrorType.receiveTimeout) {
+          if (e.type == DioExceptionType.receiveTimeout) {
             errorMessage +=
                 'The server is taking longer than usual to respond. Please check your bookings to verify if it was created.';
           } else {

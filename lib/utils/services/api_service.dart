@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flexpromoter/exports.dart';
 import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
 import 'package:flexpromoter/utils/services/error_handler.dart';
@@ -37,23 +39,19 @@ class ApiService {
 
   // Generic POST request
   Future<Response> post(String url,
-      {Map<String, dynamic>? data, bool requiresAuth = true}) async {
+      {dynamic data, bool requiresAuth = true}) async {
     try {
       final headers = await _buildHeaders(requiresAuth);
+      print("Sending POST to $url with data: ${jsonEncode(data)}"); // Add this
       final response = await _dio.post(
         url,
         data: data,
-        options: Options(
-          headers: headers,
-          receiveTimeout:
-              const Duration(seconds: 30), // Added explicit timeout here too
-          sendTimeout: const Duration(seconds: 30),
-        ),
+        options: Options(headers: headers),
       );
-      print("POST Request to $url succeeded with response: ${response.data}");
+      print("Received response: ${response.data}");
       return response;
     } on DioException catch (e) {
-      print("POST Request to $url failed with error: ${e.message}");
+      print("Error details: ${e.response?.data}"); // Add this
       throw _handleDioError(e);
     }
   }
@@ -111,7 +109,29 @@ class ApiService {
   }
 
   Exception _handleDioError(DioException error) {
-    final errorMessage = ErrorHandler.handleError(error);
-    return Exception(errorMessage);
+    if (error.response != null && error.response?.data != null) {
+      final responseData = error.response?.data;
+
+      // Check if the backend error contains a "data" field with error details
+      if (responseData is Map<String, dynamic> &&
+          responseData['data'] != null) {
+        final errorDetails = responseData['data'];
+        if (errorDetails is Map<String, dynamic>) {
+          // Format the error details into a readable string
+          final errorMessage = errorDetails.entries
+              .map((entry) => '${entry.key}: ${entry.value.join(', ')}')
+              .join('; ');
+          return Exception(errorMessage);
+        }
+      }
+
+      // Fallback to the "message" field if available
+      if (responseData['message'] != null) {
+        return Exception(responseData['message']);
+      }
+    }
+
+    // Default error message if no specific details are available
+    return Exception(ErrorHandler.handleError(error));
   }
 }

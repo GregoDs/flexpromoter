@@ -26,7 +26,8 @@ final bookingsCubit = BookingsCubit(repository: BookingsRepository());
 
 class AppRoutes {
   static final routes = {
-    Routes.splash: (context) => const StartupRedirector(),
+    // Routes.splash: (context) => const StartupRedirector(),
+    Routes.splash: (context) => const SplashScreen(),
     Routes.onboarding: (context) => const OnBoardingScreen(),
     Routes.login: (context) => BlocProvider.value(
           value: authCubit,

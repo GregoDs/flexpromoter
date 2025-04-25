@@ -5,19 +5,23 @@ class ErrorHandler {
     if (error.response != null) {
       // Check if the response contains error messages in the format provided
       if (error.response?.data != null &&
-          error.response?.data is Map<String, dynamic> &&
-          error.response?.data['errors'] != null) {
-        // Extract error messages from the response
-        final errors = error.response?.data['errors'];
+          error.response?.data is Map<String, dynamic>) {
+        final responseData = error.response?.data;
 
-        // If errors is a list, take the first error message
-        if (errors is List && errors.isNotEmpty) {
-          return errors[0].toString();
+        // Handle 400 status code with specific error message
+        if (error.response?.statusCode == 400 && responseData['data'] != null) {
+          final errorMessage = responseData['data'];
+          if (errorMessage is List && errorMessage.isNotEmpty) {
+            return errorMessage.join(', '); // Join multiple error messages
+          }
+          if (errorMessage is String) {
+            return errorMessage; // Return single error message
+          }
         }
 
-        // If errors is a string, return it directly
-        if (errors is String) {
-          return errors;
+        // Handle other status codes with 'message' field
+        if (responseData['message'] != null) {
+          return responseData['message'];
         }
       }
 
@@ -30,7 +34,7 @@ class ErrorHandler {
         case 403:
           return "Forbidden. You don't have permission to access this resource.";
         case 404:
-          return "Promoter not found. Please try again.";
+          return "Resource not found. Please try again.";
         case 422:
           return "Validation error. Please check your input.";
         case 500:

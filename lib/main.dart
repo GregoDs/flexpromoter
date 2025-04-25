@@ -1,11 +1,11 @@
 import 'package:flexpromoter/features/onboarding/splash_screen.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
+// import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'exports.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  // FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   await dotenv.load(fileName: ".env");
 
@@ -39,8 +39,8 @@ class MyApp extends StatelessWidget {
             ),
             themeMode: ThemeMode.system,
             routes: AppRoutes.routes,
-            home: const StartupRedirector(),
-            // home: const SplashScreen(),
+            // home: const StartupRedirector(),
+              home: const SplashScreen(),
           ),
         );
       },

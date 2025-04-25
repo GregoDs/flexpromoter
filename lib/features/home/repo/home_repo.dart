@@ -11,143 +11,93 @@ class HomeRepo {
     required String slipNo,
   }) async {
     try {
-      // Get stored user data
+      // Fetch user data
       final userData = await SharedPreferencesHelper.getUserData();
-      if (userData == null)
+      if (userData == null) {
         throw Exception('User data not found. Please login again.');
+      }
 
       final userModel = UserModel.fromJson(userData);
       final localUserId = userModel.user.id.toString();
-
       developer.log('User ID loaded from SharedPreferences: $localUserId');
 
-      // Get booking response
-      final bookingResponse =
-          await SharedPreferencesHelper.getBookingResponse();
+      // Fetch booking details
+      developer.log('Fetching booking details for receipt: $slipNo');
+      final bookingResponse = await _apiService.post(
+        '${ApiService.prodEndpointBookings}/booking/by-receipt',
+        data: {
+          'user_id': localUserId,
+          'receipt_no': slipNo,
+        },
+      );
 
-      String? bookingReference =
-          bookingResponse?.data?.productBooking?.bookingReference;
-      String? bookingPrice =
-          bookingResponse?.data?.productBooking?.bookingPrice?.toString();
+      if (bookingResponse.statusCode != 200 || bookingResponse.data == null) {
+        throw Exception(
+            'Failed to fetch booking details (Status: ${bookingResponse.statusCode})');
+      }
 
-      // If either value is missing, fallback to closed bookings
-      if ((bookingReference == null || bookingReference.isEmpty) ||
-          (bookingPrice == null || bookingPrice.isEmpty)) {
-        developer.log('Fallback: Getting booking data from closed bookings...');
+      // Parse booking data
+      final productBooking = bookingResponse.data['data']?['product_booking'];
+      if (productBooking == null) {
+        throw Exception('No booking found for receipt $slipNo');
+      }
 
-        // Get all closed bookings
-        final closedBookings =
-            await SharedPreferencesHelper.loadClosedBookings();
+      final bookingReference = productBooking['booking_reference']?.toString();
+      final bookingPrice = productBooking['booking_price'].toString();
+      final bookingUserId = productBooking['user_id']?.toString();
 
-        if (closedBookings.isEmpty) {
-          throw Exception('No closed booking data found.');
-        }
-
-        // Start the stopwatch to measure the time taken for the loop
-        final stopwatch = Stopwatch()..start();
-
-        Exception? lastError;
-        
-          // Loop through closed bookings and try each one
-          for (final booking in closedBookings) {
-            final ref = booking.bookingReference;
-            final price = booking.bookingPrice?.toString();
-
-            if (ref != null &&
-                ref.isNotEmpty &&
-                price != null &&
-                price.isNotEmpty) {
-              bookingReference = ref;
-              bookingPrice = price;
-
-              developer.log('Found booking - Reference: $bookingReference, Price: $bookingPrice');
-
-              final requestData = {
-                'user_id': localUserId,
-                'booking_reference': bookingReference,
-                'slip_no': slipNo,
-                'validated_amount': bookingPrice,
-              };
-
-              developer.log('Sending validation request with data: $requestData');
-
-              try {
-                final response = await _apiService.post(
-                  '${ApiService.prodEndpointBookings}/promoters/validate-receipt',
-                  data: requestData,
-                );
-
-                developer.log('Validation Response: ${response.data}');
-
-                if (response.statusCode == 200 || response.statusCode == 201) {
-                  developer.log(
-                    '🎉 Receipt Successfully Validated\n'
-                    '➡ Reference: $bookingReference\n'
-                    '➡ Price (validated_amount): $bookingPrice\n'
-                    '➡ Slip No: $slipNo\n'
-                    '➡ User ID: $localUserId',
-                  );
-                  return response.data;
-                } else {
-                  throw Exception(response.data['message']);
-                }
-              } catch (e) {
-                lastError = Exception('❌ Validation failed for reference $ref: ${e.toString()}');
-                developer.log(lastError.toString());
-              }
-            } else {
-              developer.log('⚠️ Skipped invalid booking data - Reference: $ref, Price: ${price ?? "null"}');
-            }
-              // // Optionally wait between attempts, if needed:
-              // await Future.delayed(const Duration(seconds: 5));
-            }
-        
-
-        // Stop the stopwatch after the loop
-        stopwatch.stop();
-        developer.log('Time taken to loop through closed bookings: ${stopwatch.elapsedMilliseconds} ms');
-
-        if (lastError != null) {
-          throw lastError!;
-        } else {
-          throw Exception('All closed bookings were invalid.');
-        }
+      // Validate required fields
+      if (bookingReference == null || bookingReference.isEmpty) {
+        throw Exception('Invalid booking reference');
+      }
+      if (bookingPrice == null) {
+        throw Exception('Invalid booking price');
+      }
+      if (bookingUserId == null || bookingUserId.isEmpty) {
+        throw Exception('Invalid user ID in booking');
       }
 
       developer.log(
-          'Booking data used - Reference: $bookingReference, Price: $bookingPrice');
+          'Booking data: Reference=$bookingReference, Price=$bookingPrice, UserID=$bookingUserId');
 
-      final requestData = {
-        'user_id': localUserId,
-        'booking_reference': bookingReference,
-        'slip_no': slipNo,
-        'validated_amount': bookingPrice,
+      // Validate receipt
+      final validationData = {
+        "user_id": bookingUserId,
+        "booking_reference": bookingReference,
+        "slip_no": slipNo,
+        "validated_amount": bookingPrice
       };
 
-      developer.log('Sending validation request with data: $requestData');
+      developer.log('Sending validation request: $validationData');
 
-      final response = await _apiService.post(
+      final validationResponse = await _apiService.post(
         '${ApiService.prodEndpointBookings}/promoters/validate-receipt',
-        data: requestData,
+        data: validationData,
       );
 
-      developer.log('Validation Response: ${response.data}');
+      developer.log('Validation response: ${validationResponse.data}');
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        developer.log(
-          '🎉 Receipt Successfully Validated\n'
-          '➡ Reference: $bookingReference\n'
-          '➡ Price (validated_amount): $bookingPrice\n'
-          '➡ Slip No: $slipNo\n'
-          '➡ User ID: $localUserId',
-        );
-        return response.data;
+      if (validationResponse.statusCode == 200 ||
+          validationResponse.statusCode == 201) {
+        developer.log('✅ Receipt validated successfully');
+        return validationResponse.data;
       } else {
-        throw Exception(response.data['message']);
+        // Extract backend error details
+        final errorDetails = validationResponse.data['data'] ?? {};
+        final errorMessage = errorDetails.entries
+            .map((entry) => '${entry.key}: ${entry.value.join(', ')}')
+            .join('; ');
+
+        final errorMsg = errorMessage.isNotEmpty
+            ? errorMessage
+            : 'Validation failed (Status: ${validationResponse.statusCode})';
+
+        developer.log('❌ Receipt validation error: $errorMsg');
+        throw Exception(errorMsg);
       }
     } catch (e) {
-      developer.log('Error during receipt validation: $e');
-      rethrow;
+      developer.log('❌ Receipt validation error: $e');
+      rethrow; // Pass the error up to the caller
     }
   }
 }
