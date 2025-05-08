@@ -62,7 +62,7 @@ class HomeRepo {
 
       // Validate receipt
       final validationData = {
-        "user_id": bookingUserId,
+        "user_id": localUserId,
         "booking_reference": bookingReference,
         "slip_no": slipNo,
         "validated_amount": bookingPrice

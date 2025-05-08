@@ -1,15 +1,12 @@
 import 'package:flexpromoter/gen/colors.gen.dart';
 import 'package:flexpromoter/routes/app_routes.dart';
-import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
 import 'package:flexpromoter/utils/widgets/scaffold_messengers.dart';
-import 'package:flexpromoter/utils/widgets/app_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:flexpromoter/features/auth/cubit/auth_cubit.dart';
 import 'package:flexpromoter/features/auth/cubit/auth_state.dart';
-import 'package:flexpromoter/features/auth/repo/auth_repo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -22,7 +19,6 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
   final TextEditingController _otpController = TextEditingController();
   String? _phoneNumber;
-  bool _isLoading = false;
   bool _isSnackBarShowing = false;
   bool _isResendingOtp = false;
   bool _isVerifyingOtp = false;
@@ -43,7 +39,6 @@ class _OtpScreenState extends State<OtpScreen> {
   void onOtpCompleted(String otp) {
     if (_phoneNumber != null) {
       setState(() {
-        _isLoading = true;
         _isVerifyingOtp = true;
       });
       authCubit.verifyOtp(_phoneNumber!, otp);
@@ -82,7 +77,6 @@ class _OtpScreenState extends State<OtpScreen> {
             } else if (state is AuthOtpSent) {
               setState(() {
                 _isResendingOtp = false;
-                _isLoading = false;
               });
               CustomSnackBar.showSuccess(
                 context,
@@ -93,7 +87,6 @@ class _OtpScreenState extends State<OtpScreen> {
               setState(() {
                 _isSnackBarShowing = true;
                 _isResendingOtp = false;
-                _isLoading = false;
                 _isVerifyingOtp = false;
               });
 

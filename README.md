@@ -1,7 +1,7 @@
 # flexpromoter
 
+FlexPromoter is your gateway to earning commissions by helping customers access the FlexPay platform. Whether you’re a promoter, agent, or enthusiast, FlexPromoter makes it easy to guide customers through selecting products, making bookings, and completing purchases — all while you earn for every successful referral.
 
-A new Flutter project.
 
 ## Getting Started
 

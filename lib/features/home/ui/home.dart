@@ -372,7 +372,7 @@ Padding(
                                     children: [
                                       _buildAnimatedStatCard(
                                         "Commissions",
-                                        "2",
+                                        "",
                                         ColorName.primaryColor,
                                         Icons.attach_money_rounded,
                                         0,
@@ -380,7 +380,7 @@ Padding(
                                       SizedBox(width: 12.w),
                                       _buildAnimatedStatCard(
                                         "View Bookings",
-                                        "15",
+                                        "",
                                         Colors.black87,
                                         Icons.calendar_month_rounded,
                                         1,
@@ -388,7 +388,7 @@ Padding(
                                       SizedBox(width: 12.w),
                                       _buildAnimatedStatCard(
                                         "LeaderBoard",
-                                        "5",
+                                        "",
                                         Colors.amber,
                                         Icons.leaderboard_rounded,
                                         2,
@@ -619,7 +619,7 @@ Padding(
   Widget _buildStatCard(
       String title, String value, Color color, IconData icon) {
     return Container(
-      width: 130.w,
+      width: 125.w,
       padding: EdgeInsets.symmetric(
         horizontal: 20.w,
         vertical: 30.h,
@@ -655,11 +655,11 @@ Padding(
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: Colors.white, size: 22.sp),
+              Icon(icon, color: Colors.white, size: 34.sp),
               Icon(
                 Icons.touch_app_rounded,
                 color: Colors.white.withOpacity(0.7),
-                size: 16.sp,
+                size: 26.sp,
               ),
             ],
           ),
@@ -671,7 +671,7 @@ Padding(
                 color: Colors.white,
                 fontSize: 26.sp,
               ),
-              SizedBox(height: 4.h),
+              SizedBox(height: 2.h),
               AppText.small(
                 title,
                 color: Colors.white.withOpacity(0.8),
