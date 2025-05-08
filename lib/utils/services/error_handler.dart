@@ -8,6 +8,16 @@ class ErrorHandler {
           error.response?.data is Map<String, dynamic>) {
         final responseData = error.response?.data;
 
+        //prioritize errors field if it exists
+        if (responseData['errors'] != null) {
+          final errors = responseData['errors'];
+          if (errors is List && errors.isNotEmpty) {
+            return errors.join(', ');
+          }
+          if (errors is String) {
+            return errors; // Return single error message
+          }
+        }
         // Handle 400 status code with specific error message
         if (error.response?.statusCode == 400 && responseData['data'] != null) {
           final errorMessage = responseData['data'];
