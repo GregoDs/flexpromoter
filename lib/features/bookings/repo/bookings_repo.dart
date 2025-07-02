@@ -287,7 +287,44 @@ class BookingsRepository {
     }
   }
 
-  // Update a booking
+  // Prompt Booking Payment
+  Future<PromptBookingPaymentResponse> promptBookingPayment(
+      PromptBookingPaymentRequest request) async {
+    try {
+      // Log the request payload
+      developer.log(
+        'PromptBookingPayment REQUEST: ${request.toJson()}',
+        name: 'BookingsRepository',
+      );
+
+      final response = await _apiService.post(
+        '${ApiService.prodEndpointBookings}/booking/prompt-payment',
+        data: request.toJson(),
+      );
+
+      // Log the full response data
+      developer.log(
+        'PromptBookingPayment RESPONSE: ${response.data}',
+        name: 'BookingsRepository',
+      );
+
+      return PromptBookingPaymentResponse.fromJson(response.data);
+    } on DioException catch (e) {
+      developer.log(
+        'PromptBookingPayment ERROR: ${e.response?.data ?? e.toString()}',
+        name: 'BookingsRepository',
+        error: e,
+      );
+      throw Exception(ErrorHandler.handleError(e));
+    } catch (e) {
+      developer.log(
+        'PromptBookingPayment UNEXPECTED ERROR: $e',
+        name: 'BookingsRepository',
+        error: e,
+      );
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
 
   // Delete a booking
 

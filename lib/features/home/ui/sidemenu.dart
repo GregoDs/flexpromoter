@@ -1,5 +1,6 @@
 import 'package:flexpromoter/features/auth/repo/auth_repo.dart'
     as SharedPreferencesHelper;
+import 'package:flexpromoter/features/home/repo/home_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,12 +65,60 @@ class _SideMenuState extends State<SideMenu> {
   int selectedItem = -1;
   String? phone;
   String? name;
+  final HomeRepo _homeRepo = HomeRepo();
 
   getData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     phone = prefs.getString('phone');
     name = prefs.getString('name');
     setState(() {});
+  }
+
+  Future<void> _deleteAccount() async {
+    try {
+      final response = await _homeRepo.deleteAccount();
+      await SharedPreferencesHelper.logout();
+      if (context.mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          Routes.onboarding,
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
+      );
+    }
+  }
+
+  void _confirmDeleteAccount() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Account"),
+        content: const Text(
+            "Are you sure you want to delete your account? This action cannot be undone."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteAccount();
+            },
+            child: const Text(
+              "Delete",
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -263,6 +312,27 @@ class _SideMenuState extends State<SideMenu> {
                 title: AppText.medium(
                   "Logout",
                   color: Colors.white,
+                  fontSize: 15.sp,
+                ),
+              ),
+            ),
+            // Delete Account Button
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                onTap: _confirmDeleteAccount,
+                leading: Icon(
+                  Icons.delete_forever,
+                  color: Colors.redAccent,
+                  size: 24.sp,
+                ),
+                title: AppText.medium(
+                  "Delete Account",
+                  color: Colors.redAccent,
                   fontSize: 15.sp,
                 ),
               ),

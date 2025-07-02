@@ -675,7 +675,7 @@ Padding(
               AppText.small(
                 title,
                 color: Colors.white.withOpacity(0.8),
-                fontSize: 13.sp,
+                fontSize: 11.sp,
               ),
             ],
           ),

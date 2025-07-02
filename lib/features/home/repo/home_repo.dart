@@ -2,14 +2,13 @@ import 'dart:developer' as developer;
 import 'package:flexpromoter/features/auth/models/user_model.dart';
 import 'package:flexpromoter/utils/services/api_service.dart';
 import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
+import 'package:dio/dio.dart';
 import 'dart:core';
 
 class HomeRepo {
   final ApiService _apiService = ApiService();
 
-  Future<Map<String, dynamic>> validateReceipt({
-    required String slipNo,
-  }) async {
+  Future<Map<String, dynamic>> validateReceipt({required String slipNo}) async {
     try {
       // Fetch user data
       final userData = await SharedPreferencesHelper.getUserData();
@@ -99,5 +98,30 @@ class HomeRepo {
       developer.log('❌ Receipt validation error: $e');
       rethrow; // Pass the error up to the caller
     }
+  }
+
+
+//Delete Account Function
+  Future<Response> deleteAccount() async {
+    // Fetch user data
+    final userData = await SharedPreferencesHelper.getUserData();
+    if (userData == null) {
+      throw Exception('User data not found. Please login again.');
+    }
+    final userModel = UserModel.fromJson(userData);
+    final localUserId = userModel.user.id.toString();
+
+    const String url =
+        "https://www.flexpay.co.ke/users/api/delete-customer-data";
+
+    final response = await _apiService.post(
+      url,
+      data: {
+        'user_id': localUserId,
+      },
+      requiresAuth: true,
+    );
+
+    return response;
   }
 }

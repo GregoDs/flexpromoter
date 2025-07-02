@@ -3,7 +3,7 @@ description: "A flexpay product."
 
 publish_to: 'none' 
 
-version: 1.0.0+4
+version: 1.0.0+8
 
 environment:
   sdk: '>=3.2.6 <4.0.0'
@@ -56,9 +56,9 @@ flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   remove_alpha_ios: true
-  image_path: "assets/icon/flexpaylogo.png"
+  image_path: "assets/icon/flexprom.jpg"
   min_sdk_android: 21
-  adaptive_icon_foreground: "assets/icon/flexpaylogo.png"
+  adaptive_icon_foreground: "assets/icon/flexprom.jpg"
   adaptive_icon_background: "#ffffff"
 
 flutter_gen:

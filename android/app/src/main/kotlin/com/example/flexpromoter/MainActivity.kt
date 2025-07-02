@@ -1,4 +1,4 @@
-package com.example.flexpromoter
+package com.flexpay.flexpromoter
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,8 +1,11 @@
+import 'package:flexpromoter/exports.dart';
 import 'package:flexpromoter/features/auth/ui/otpverification.dart';
+import 'package:flexpromoter/features/bookings/cubit/bkpayment_cubit.dart';
 import 'package:flexpromoter/features/bookings/cubit/make_booking_cubit.dart';
 import 'package:flexpromoter/features/bookings/ui/booking_details.dart';
 import 'package:flexpromoter/features/bookings/ui/bookings.dart';
 import 'package:flexpromoter/features/bookings/ui/make_bookings.dart';
+import 'package:flexpromoter/features/bookings/ui/payment_bk.dart';
 import 'package:flexpromoter/features/commissions/cubit/commissions_cubit.dart';
 import 'package:flexpromoter/features/commissions/ui/commissions.dart';
 import 'package:flexpromoter/features/leaderboard/ui/leaderboard_screen.dart';
@@ -70,6 +73,22 @@ class AppRoutes {
           value: LeaderboardCubit(repository: LeaderboardRepository()),
           child: const LeaderboardScreen(),
         ),
+
+    // Routes.promptBookingPayment: (context) {
+    //   final args = ModalRoute.of(context)!.settings.arguments as String;
+    //   return BookingPaymentPage(customerPhone: args, bookingReference: args,);
+    // },
+
+    Routes.promptBookingPayment: (context) {
+  final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+  return BlocProvider(
+    create: (_) => BKPaymentCubit(bookingsRepository: BookingsRepository()),
+    child: BookingPaymentPage(
+      customerPhone: args['customerPhone'],
+      bookingReference: args['bookingReference'],
+    ),
+  );
+},
   };
 }
 
@@ -85,4 +104,5 @@ class Routes {
   static const commissions = '/commissions';
   static const leaderboard = '/leaderboard';
   static const bookingDetails = '/booking-details';
+  static const promptBookingPayment = 'prompt-bkpayment';
 }

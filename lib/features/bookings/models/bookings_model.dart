@@ -47,35 +47,35 @@ class Booking {
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
-  return Booking(
-    id: int.tryParse(json['id'].toString()) ?? 0,
-    bookingReference: json['booking_reference']?.toString() ?? '',
-    bookingPrice: int.tryParse(json['booking_price'].toString()) ?? 0,
-    createdAt: json['created_at']?.toString() ?? '',
-    updatedAt: json['updated_at']?.toString() ?? '',
-    bookingStatus: json['booking_status']?.toString() ?? '',
-    productId: int.tryParse(json['product_id'].toString()) ?? 0,
-    outletId: int.tryParse(json['outlet_id'].toString()) ?? 0,
-    userId: int.tryParse(json['user_id'].toString()) ?? 0,
-    totalPayments: json['total_payments'] != null
-        ? int.tryParse(json['total_payments'].toString())
-        : null,
-    bookingInterest: json['booking_interest'] ?? [],
-    interestAmount: int.tryParse(json['interest_amount'].toString()) ?? 0,
-    maturityDate: json['maturity_date']?.toString() ?? '',
-    targetSaving: int.tryParse(json['target_saving'].toString()) ?? 0,
-    chamaDescription: json['chama_description']?.toString(),
-    image: json['image']?.toString(),
-    progress: int.tryParse(json['progress'].toString()) ?? 0,
-    customer: Customer.fromJson(json['customer'] ?? {}),
-    product: Product.fromJson(json['product'] ?? {}),
-    outlet: Outlet.fromJson(json['outlet'] ?? {}),
-    payment: (json['payment'] as List?)
-            ?.map((p) => Payment.fromJson(p))
-            .toList() ??
-        [],
-  );
-}
+    return Booking(
+      id: int.tryParse(json['id'].toString()) ?? 0,
+      bookingReference: json['booking_reference']?.toString() ?? '',
+      bookingPrice: int.tryParse(json['booking_price'].toString()) ?? 0,
+      createdAt: json['created_at']?.toString() ?? '',
+      updatedAt: json['updated_at']?.toString() ?? '',
+      bookingStatus: json['booking_status']?.toString() ?? '',
+      productId: int.tryParse(json['product_id'].toString()) ?? 0,
+      outletId: int.tryParse(json['outlet_id'].toString()) ?? 0,
+      userId: int.tryParse(json['user_id'].toString()) ?? 0,
+      totalPayments: json['total_payments'] != null
+          ? int.tryParse(json['total_payments'].toString())
+          : null,
+      bookingInterest: json['booking_interest'] ?? [],
+      interestAmount: int.tryParse(json['interest_amount'].toString()) ?? 0,
+      maturityDate: json['maturity_date']?.toString() ?? '',
+      targetSaving: int.tryParse(json['target_saving'].toString()) ?? 0,
+      chamaDescription: json['chama_description']?.toString(),
+      image: json['image']?.toString(),
+      progress: int.tryParse(json['progress'].toString()) ?? 0,
+      customer: Customer.fromJson(json['customer'] ?? {}),
+      product: Product.fromJson(json['product'] ?? {}),
+      outlet: Outlet.fromJson(json['outlet'] ?? {}),
+      payment: (json['payment'] as List?)
+              ?.map((p) => Payment.fromJson(p))
+              .toList() ??
+          [],
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -159,37 +159,37 @@ class Customer {
   });
 
   factory Customer.fromJson(Map<String, dynamic> json) {
-  return Customer(
-    id: json['id'] ?? 0,
-    countryId: json['country_id'] ?? 0,
-    userId: json['user_id'] ?? 0,
-    referralId: json['referral_id']?.toString(),
-    firstName: json['first_name']?.toString() ?? '',
-    lastName: json['last_name']?.toString() ?? '',
-    phoneNumber1: json['phone_number_1']?.toString() ?? '',
-    mpesaCustomerId: json['mpesa_customer_id']?.toString() ?? '',
-    phoneNumber2: json['phone_number_2']?.toString(),
-    idNumber: json['id_number']?.toString(),
-    passportNumber: json['passport_number']?.toString(),
-    dob: json['dob']?.toString(),
-    gender: json['gender']?.toString() ?? '',
-    country: json['country']?.toString(),
-    customerLongitude: json['customer_longitude'] != null
-        ? double.tryParse(json['customer_longitude'].toString())
-        : null,
-    customerLatitude: json['customer_latitude'] != null
-        ? double.tryParse(json['customer_latitude'].toString())
-        : null,
-    pin: json['pin']?.toString(),
-    deletedAt: json['deleted_at']?.toString(),
-    createdAt: json['created_at']?.toString() ?? '',
-    updatedAt: json['updated_at']?.toString() ?? '',
-    stripeCustomerId: json['stripe_customer_id']?.toString(),
-    scoreHasBeenComputed: json['score_has_been_computed'] ?? 0,
-    referralCode: json['referral_code']?.toString() ?? '',
-    isFlexsaveCustomer: json['is_flexsave_customer'] ?? 0,
-  );
-}
+    return Customer(
+      id: json['id'] ?? 0,
+      countryId: json['country_id'] ?? 0,
+      userId: json['user_id'] ?? 0,
+      referralId: json['referral_id']?.toString(),
+      firstName: json['first_name']?.toString() ?? '',
+      lastName: json['last_name']?.toString() ?? '',
+      phoneNumber1: json['phone_number_1']?.toString() ?? '',
+      mpesaCustomerId: json['mpesa_customer_id']?.toString() ?? '',
+      phoneNumber2: json['phone_number_2']?.toString(),
+      idNumber: json['id_number']?.toString(),
+      passportNumber: json['passport_number']?.toString(),
+      dob: json['dob']?.toString(),
+      gender: json['gender']?.toString() ?? '',
+      country: json['country']?.toString(),
+      customerLongitude: json['customer_longitude'] != null
+          ? double.tryParse(json['customer_longitude'].toString())
+          : null,
+      customerLatitude: json['customer_latitude'] != null
+          ? double.tryParse(json['customer_latitude'].toString())
+          : null,
+      pin: json['pin']?.toString(),
+      deletedAt: json['deleted_at']?.toString(),
+      createdAt: json['created_at']?.toString() ?? '',
+      updatedAt: json['updated_at']?.toString() ?? '',
+      stripeCustomerId: json['stripe_customer_id']?.toString(),
+      scoreHasBeenComputed: json['score_has_been_computed'] ?? 0,
+      referralCode: json['referral_code']?.toString() ?? '',
+      isFlexsaveCustomer: json['is_flexsave_customer'] ?? 0,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -238,14 +238,14 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
-  return Product(
-    id: json['id'] ?? 0,
-    productName: json['product_name']?.toString() ?? '',
-    maturityDate: json['maturity_date']?.toString(),
-    targetSaving: json['target_saving'] ?? 0,
-    chamaDescription: json['chama_description']?.toString(),
-  );
-}
+    return Product(
+      id: json['id'] ?? 0,
+      productName: json['product_name']?.toString() ?? '',
+      maturityDate: json['maturity_date']?.toString(),
+      targetSaving: json['target_saving'] ?? 0,
+      chamaDescription: json['chama_description']?.toString(),
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -269,11 +269,11 @@ class Outlet {
   });
 
   factory Outlet.fromJson(Map<String, dynamic> json) {
-  return Outlet(
-    id: json['id'] ?? 0,
-    outletName: json['outlet_name']?.toString() ?? '',
-  );
-}
+    return Outlet(
+      id: json['id'] ?? 0,
+      outletName: json['outlet_name']?.toString() ?? '',
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -297,14 +297,14 @@ class Payment {
     required this.createdAt,
   });
 
-factory Payment.fromJson(Map<String, dynamic> json) {
-  return Payment(
-    id: json['id'] ?? 0,
-    bookingId: json['booking_id'] ?? 0,
-    paymentAmount: json['payment_amount'] ?? 0,
-    createdAt: json['created_at']?.toString() ?? '',
-  );
-}
+  factory Payment.fromJson(Map<String, dynamic> json) {
+    return Payment(
+      id: json['id'] ?? 0,
+      bookingId: json['booking_id'] ?? 0,
+      paymentAmount: json['payment_amount'] ?? 0,
+      createdAt: json['created_at']?.toString() ?? '',
+    );
+  }
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -312,5 +312,41 @@ factory Payment.fromJson(Map<String, dynamic> json) {
       'payment_amount': paymentAmount,
       'created_at': createdAt,
     };
+  }
+}
+
+//Prompt Models
+class PromptBookingPaymentRequest {
+  final String reference;
+  final String phone;
+  final String amount;
+
+  PromptBookingPaymentRequest({
+    required this.reference,
+    required this.phone,
+    required this.amount,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'reference': reference,
+        'phone': phone,
+        'amount': amount,
+      };
+}
+
+class PromptBookingPaymentResponse {
+  final String message;
+  final bool success;
+
+  PromptBookingPaymentResponse({
+    required this.message,
+    required this.success,
+  });
+
+  factory PromptBookingPaymentResponse.fromJson(Map<String, dynamic> json) {
+    return PromptBookingPaymentResponse(
+      message: json['message'] ?? '',
+      success: json['success'] ?? false,
+    );
   }
 }
