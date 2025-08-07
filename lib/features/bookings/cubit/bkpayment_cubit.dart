@@ -18,10 +18,16 @@ class BKPaymentCubit extends Cubit<BKPaymentState> {
       if (response.success) {
         emit(BKPaymentSuccess(response.message));
       } else {
+        // If the response is not successful, emit the error message
         emit(BKPaymentError(response.message));
       }
     } catch (e) {
-      emit(BKPaymentError(e.toString()));
+      // If the exception has a message, use it; otherwise, use a generic error
+      String errorMsg = e.toString();
+      if (e is Exception && e.toString().startsWith('Exception: ')) {
+        errorMsg = e.toString().replaceFirst('Exception: ', '');
+      }
+      emit(BKPaymentError(errorMsg));
     }
   }
 }

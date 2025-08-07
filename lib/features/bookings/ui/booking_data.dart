@@ -1,10 +1,14 @@
+import 'package:flexpromoter/features/bookings/cubit/bkpayment_cubit.dart';
+import 'package:flexpromoter/features/bookings/repo/bookings_repo.dart';
+import 'package:flexpromoter/features/bookings/ui/payment_bk.dart';
 import 'package:flexpromoter/routes/app_routes.dart';
+import 'package:flexpromoter/utils/widgets/scaffold_messengers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
 import 'package:flexpromoter/features/bookings/models/bookings_model.dart';
-import 'package:flexpromoter/features/bookings/ui/payment_bk.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 void showBookingDetails(BuildContext context, Booking booking) {
   final progress =
@@ -27,179 +31,209 @@ void showBookingDetails(BuildContext context, Booking booking) {
   }
 
   showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) {
-      return FractionallySizedBox(
-        heightFactor: 0.6, // Reduced height for a neater fit
-        child: Stack(
-          alignment: Alignment.topCenter,
-          children: [
-            // Card with details
-            Container(
-              margin: const EdgeInsets.only(top: 60),
-              padding: const EdgeInsets.fromLTRB(20, 70, 20, 20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF184A5A),
-                borderRadius: BorderRadius.circular(32),
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  // crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Product Name
-                    Text(
-                      booking.product.productName,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final double modalHeight =
+            MediaQuery.of(context).size.height * 0.45; // 65% of screen
+        return Container(
+          width: double.infinity,
+          constraints: BoxConstraints(
+            minHeight: modalHeight,
+            maxHeight: MediaQuery.of(context).size.height * 0.95,
+          ),
+          decoration: const BoxDecoration(
+            color: Color(0xFF184A5A),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
+            ),
+          ),
+          child: Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              // Card with details
+              Container(
+                margin: const EdgeInsets.only(top: 60),
+                padding: const EdgeInsets.fromLTRB(20, 70, 20, 20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF184A5A),
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                child: SingleChildScrollView(
+                  // If you use DraggableScrollableSheet, pass scrollController here
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    // crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Product Name
+                      Text(
+                        booking.product?.productName ?? '',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Outlet Name
-                    Text(
-                      booking.outlet.outletName,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 15,
-                        color: Colors.cyan[100],
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 1.1,
+                      const SizedBox(height: 4),
+                      // Outlet Name
+                      Text(
+                        booking.outlet?.outletName ?? '',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 15,
+                          color: Colors.cyan[100],
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.1,
+                        ),
+                        overflow:
+                            TextOverflow.visible, // or remove overflow property
+                        softWrap: true,
                       ),
-                      overflow:
-                          TextOverflow.visible, // or remove overflow property
-                      softWrap: true,
-                    ),
-                    const SizedBox(height: 20),
-                    // Row: Product Cost & Balance
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _iconDetail(
-                          icon: Icons.attach_money,
-                          label: "Product Cost",
-                          value: "Kshs ${booking.bookingPrice}",
-                        ),
-                        _iconDetail(
-                          icon: Icons.account_balance_wallet,
-                          label: "Balance",
-                          value: "Kshs $balance",
-                          alignEnd: true,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Divider(color: Colors.white.withOpacity(0.3)),
-                    const SizedBox(height: 8),
-                    // Row: Paid & Booking Reference
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _iconDetail(
-                          icon: Icons.payments,
-                          label: "Paid",
-                          value: "Kshs ${booking.totalPayments ?? 0}",
-                        ),
-                        _iconDetail(
-                          icon: Icons.confirmation_number,
-                          label: "Reference",
-                          value: booking.bookingReference,
-                          alignEnd: true,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Divider(color: Colors.white.withOpacity(0.3)),
-                    const SizedBox(height: 8),
-                    // Row: Customer Phone & Date
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _iconDetail(
-                          icon: Icons.phone,
-                          label: "Customer Phone",
-                          value: "+${booking.customer.phoneNumber1}",
-                        ),
-                        _iconDetail(
-                          icon: Icons.calendar_today,
-                          label: "Date",
-                          value: formattedDate,
-                          alignEnd: true,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 26),
-                    // Row: Branch & time
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _iconDetail(
-                          icon: Icons.location_on,
-                          label: "Branch",
-                          value: booking.outlet.outletName,
-                        ),
-                        _iconDetail(
-                          icon: Icons.lock_clock,
-                          label: "Time created",
-                          value: formattedTime,
-                          alignEnd: true,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    if (!isComplete)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context); // Close the modal first
-
-                            Navigator.pushNamed(
-                              context,
-                              Routes.promptBookingPayment,
-                              arguments: {
-                                'customerPhone': booking.customer.phoneNumber1,
-                                'bookingReference': booking.bookingReference,
-                              },
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1DB6E4),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(32),
-                            ),
-                            textStyle: GoogleFonts.montserrat(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      const SizedBox(height: 20),
+                      // Row: Product Cost & Balance
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _iconDetail(
+                            icon: Icons.attach_money,
+                            label: "Product Cost",
+                            value: "Kshs ${booking.bookingPrice}",
                           ),
-                          child: const Text("Prompt Payment"),
-                        ),
+                          _iconDetail(
+                            icon: Icons.account_balance_wallet,
+                            label: "Balance",
+                            value: "Kshs $balance",
+                            alignEnd: true,
+                          ),
+                        ],
                       ),
-                    const SizedBox(height: 20),
-                  ],
+                      const SizedBox(height: 12),
+                      Divider(color: Colors.white.withOpacity(0.3)),
+                      const SizedBox(height: 8),
+                      // Row: Paid & Booking Reference
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _iconDetail(
+                            icon: Icons.payments,
+                            label: "Paid",
+                            value: "Kshs ${booking.totalPayments ?? 0}",
+                          ),
+                          _iconDetail(
+                            icon: Icons.confirmation_number,
+                            label: "Reference",
+                            value: booking.bookingReference,
+                            alignEnd: true,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Divider(color: Colors.white.withOpacity(0.3)),
+                      const SizedBox(height: 8),
+                      // Row: Customer Phone & Date
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _iconDetail(
+                            icon: Icons.phone,
+                            label: "Customer Phone",
+                            value: "+${booking.customerPhoneNum}",
+                          ),
+                          _iconDetail(
+                            icon: Icons.calendar_today,
+                            label: "Date",
+                            value: formattedDate,
+                            alignEnd: true,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 26),
+                      // Row: Branch & time
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _iconDetail(
+                            icon: Icons.location_on,
+                            label: "Branch",
+                            value: booking.outlet?.outletName ?? '',
+                          ),
+                          _iconDetail(
+                            icon: Icons.lock_clock,
+                            label: "Time created",
+                            value: formattedTime,
+                            alignEnd: true,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 30),
+                      if (!isComplete)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final result = await showDialog(
+                                context: context,
+                                builder: (_) => BlocProvider.value(
+                                  value: BKPaymentCubit(
+                                      bookingsRepository: BookingsRepository()),
+                                  child: PaymentPromptDialog(
+                                    customerPhone:
+                                        booking.customer?.phoneNumber1 ?? '',
+                                    bookingReference: booking.bookingReference,
+                                  ),
+                                ),
+                              );
+                              if (result != null && result is Map) {
+                                if (result['type'] == 'success') {
+                                  CustomSnackBar.showSuccess(
+                                    context,
+                                    title: "Payment Prompt Sent",
+                                    message: result['message'] ?? '',
+                                  );
+                                } else if (result['type'] == 'error') {
+                                  CustomSnackBar.showError(
+                                    context,
+                                    title: "Payment Error",
+                                    message: result['message'] ?? '',
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1DB6E4),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(32),
+                              ),
+                              textStyle: GoogleFonts.montserrat(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            child: const Text("Prompt Payment"),
+                          ),
+                        ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // Avatar with progress
-            Positioned(
-              top: 0,
-              child: _BookingProgressAvatar(
-                imagePath: "assets/images/bookingicon.png",
-                progress: progress / 100,
+              // Avatar with progress
+              Positioned(
+                top: 0,
+                child: _BookingProgressAvatar(
+                  imagePath: "assets/images/bookingicon.png",
+                  progress: progress / 100,
+                ),
               ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
+            ],
+          ),
+        );
+      });
 }
 
 // Helper widget for icon + detail
@@ -296,7 +330,7 @@ class _ArcPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    final startAngle = -math.pi / 2;
+    const startAngle = -math.pi / 2;
     final sweepAngle = 2 * math.pi * progress;
     final paint = Paint()
       ..color = const Color(0xFFFF3B30)

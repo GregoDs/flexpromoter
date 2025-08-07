@@ -13,133 +13,119 @@ import 'package:flexpromoter/utils/widgets/scaffold_messengers.dart'
 class BookingsRepository {
   final ApiService _apiService = ApiService();
 
-  // Fetch all types of bookings in parallel
-  Future<Map<String, List<Booking>>> fetchAllBookings(int userId) async {
-    try {
-      //get user id from shared preferences
-      final userData = await SharedPreferencesHelper.getUserData();
-      if (userData == null) {
-        throw Exception('User Data not found. Please Login and try again');
-      }
-      //parse user data
-      final userModel = UserModel.fromJson(userData);
-      final userId = userModel.user.id.toString();
-
-      developer.log('Fetching bookings for userId: $userId',
-          name: 'BookingsRepository');
-
-      final responses = await Future.wait([
-        _apiService.get(
-            '${ApiService.prodEndpointBookings}/promoter/bookings/open/$userId'),
-        _apiService.get(
-            '${ApiService.prodEndpointBookings}/promoter/bookings/closed/$userId'),
-        _apiService.get(
-            '${ApiService.prodEndpointBookings}/promoter/bookings/redeemed/$userId'),
-        _apiService.get(
-            '${ApiService.prodEndpointBookings}/promoter/bookings/unserviced/$userId'),
-      ]);
-
-      // Detailed logging for unserviced bookings response
-      developer.log('=== UNSERVICED BOOKINGS RESPONSE START ===',
-          name: 'BookingsRepository');
-      developer.log('Status Code: ${responses[3].statusCode}',
-          name: 'BookingsRepository');
-      developer.log('Response Data: ${responses[3].data}',
-          name: 'BookingsRepository');
-      developer.log('=== UNSERVICED BOOKINGS RESPONSE END ===',
-          name: 'BookingsRepository');
-
-      // Process each response and use them directly
-      final Map<String, List<Booking>> result = {
-        'open': _parseBookingsResponse(responses[0]),
-        'closed': _parseBookingsResponse(responses[1]),
-        'redeemed': _parseBookingsResponse(responses[2]),
-        'unserviced': _parseBookingsResponse(responses[3]),
-      };
-
-      // Log the counts for debugging
-      developer.log(
-          'Final result counts - Open: ${result['open']?.length}, '
-          'Closed: ${result['closed']?.length}, '
-          'Redeemed: ${result['redeemed']?.length}, '
-          'Unserviced: ${result['unserviced']?.length}',
-          name: 'BookingsRepository');
-
-      // Additional logging for unserviced bookings after parsing
-      if (result['unserviced']?.isNotEmpty ?? false) {
-        developer.log('=== PARSED UNSERVICED BOOKINGS START ===',
-            name: 'BookingsRepository');
-        for (var booking in result['unserviced']!) {
-          developer.log(
-              'Booking ID: ${booking.id}, '
-              'Reference: ${booking.bookingReference}, '
-              'Status: ${booking.bookingStatus}, '
-              'Customer: ${booking.customer.firstName} ${booking.customer.lastName}',
-              name: 'BookingsRepository');
-        }
-        developer.log('=== PARSED UNSERVICED BOOKINGS END ===',
-            name: 'BookingsRepository');
-      } else {
-        developer.log('No unserviced bookings found after parsing',
-            name: 'BookingsRepository');
-      }
-
-      // Save fetched bookings to SharedPreferences
-      // await SharedPreferencesHelper.saveBookings(
-      //     result['open']!); // Save open bookings
-      await SharedPreferencesHelper.saveClosedBookings(
-          result['closed']!); // Save closed bookings
-      // await SharedPreferencesHelper.saveBookings(
-      //     result['redeemed']!); // Save redeemed bookings
-      // await SharedPreferencesHelper.saveBookings(
-      //     result['unserviced']!); // Save unserviced bookings
-
-      return result;
-    } catch (e) {
-      developer.log('Error fetching bookings: $e',
-          name: 'BookingsRepository', error: e);
-      // Return empty lists for all types if there's an error
-      return {
-        'open': [],
-        'closed': [],
-        'redeemed': [],
-        'unserviced': [],
-      };
+  // Fetch open bookings (Active)
+  Future<Map<String, dynamic>> fetchOpenBookings({int page = 1}) async {
+    final userData = await SharedPreferencesHelper.getUserData();
+    if (userData == null) {
+      throw Exception('User Data not found. Please Login and try again');
     }
+    final userModel = UserModel.fromJson(userData);
+    final userId = userModel.user.id.toString();
+    final response = await _apiService.get(
+      '${ApiService.prodEndpointBookings}/promoter/bookings/open/$userId?page=$page',
+    );
+    return _parsePaginatedBookingsResponse(response.data);
+  }
+
+  // Fetch closed bookings (Completed)
+  Future<Map<String, dynamic>> fetchClosedBookings({int page = 1}) async {
+    final userData = await SharedPreferencesHelper.getUserData();
+    if (userData == null) {
+      throw Exception('User Data not found. Please Login and try again');
+    }
+    final userModel = UserModel.fromJson(userData);
+    final userId = userModel.user.id.toString();
+    final response = await _apiService.get(
+      '${ApiService.prodEndpointBookings}/promoter/bookings/closed/$userId?page=$page',
+    );
+    return _parsePaginatedBookingsResponse(response.data);
+  }
+
+  // Fetch redeemed bookings
+  Future<Map<String, dynamic>> fetchRedeemedBookings({int page = 1}) async {
+    final userData = await SharedPreferencesHelper.getUserData();
+    if (userData == null) {
+      throw Exception('User Data not found. Please Login and try again');
+    }
+    final userModel = UserModel.fromJson(userData);
+    final userId = userModel.user.id.toString();
+    final response = await _apiService.get(
+      '${ApiService.prodEndpointBookings}/promoter/bookings/redeemed/$userId?page=$page',
+    );
+    return _parsePaginatedBookingsResponse(response.data);
+  }
+
+  // Fetch unserviced bookings
+  Future<Map<String, dynamic>> fetchUnservicedBookings({int page = 1}) async {
+    final userData = await SharedPreferencesHelper.getUserData();
+    if (userData == null) {
+      throw Exception('User Data not found. Please Login and try again');
+    }
+    final userModel = UserModel.fromJson(userData);
+    final userId = userModel.user.id.toString();
+    final response = await _apiService.get(
+      '${ApiService.prodEndpointBookings}/promoter/bookings/unserviced/$userId?page=$page',
+    );
+    return _parsePaginatedBookingsResponse(response.data);
   }
 
   // Helper method to parse booking responses
   List<Booking> _parseBookingsResponse(dynamic response) {
     try {
-      if (response.statusCode == 200 && response.data['data'] != null) {
-        final List<dynamic> bookingsData = response.data['data'];
-        final List<Booking> bookings = [];
-
-        for (var json in bookingsData) {
-          try {
-            final booking = Booking.fromJson(json);
-            bookings.add(booking);
-          } catch (e, stackTrace) {
-            developer.log(
-                'Error parsing individual booking: $e\n'
-                'Booking data: $json\n'
-                'Stack trace: $stackTrace',
-                name: 'BookingsRepository');
-          }
-        }
-
-        developer.log('Successfully parsed ${bookings.length} bookings',
-            name: 'BookingsRepository');
-        return bookings;
+      // Case 1: If response is like {data: {data: [...]}}
+      if (response is Map<String, dynamic> &&
+          response['data'] is Map<String, dynamic> &&
+          response['data']['data'] is List) {
+        return (response['data']['data'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map((json) => Booking.fromJson(json))
+            .toList();
       }
+
+      //Case 2; if response is {data:[]}
+      if (response is Map<String, dynamic> && response['data'] is List) {
+        return (response['data'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map((json) => Booking.fromJson(json))
+            .toList();
+      }
+
+      // If response is directly a List of bookings
+      if (response is List) {
+        return response
+            .whereType<Map<String, dynamic>>()
+            .map((json) => Booking.fromJson(json))
+            .toList();
+      }
+      // Log unexpected format
+      print('Unexpected bookings response format: $response');
       return [];
-    } catch (e, stackTrace) {
-      developer.log(
-          'Error parsing booking response: $e\n'
-          'Response data: ${response.data}\n'
-          'Stack trace: $stackTrace',
-          name: 'BookingsRepository');
+    } catch (e) {
+      print('Error parsing bookings response: $e');
       return [];
+    }
+  }
+
+  Map<String, dynamic> _parsePaginatedBookingsResponse(dynamic response) {
+    try {
+      if (response is Map<String, dynamic> &&
+          response['data'] is Map<String, dynamic> &&
+          response['data']['data'] is List) {
+        final bookings = (response['data']['data'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map((json) => Booking.fromJson(json))
+            .toList();
+        final totalPages = response['data']['last_page'] ?? 1;
+        return {
+          'bookings': bookings,
+          'totalPages': totalPages,
+        };
+      }
+      print('Unexpected bookings response format: $response');
+      return {'bookings': [], 'totalPages': 1};
+    } catch (e) {
+      print('Error parsing bookings response: $e');
+      return {'bookings': [], 'totalPages': 1};
     }
   }
 
@@ -227,31 +213,31 @@ class BookingsRepository {
             e.type == DioExceptionType.sendTimeout) {
           await Future.delayed(const Duration(seconds: 2));
 
-          try {
-            final bookings = await fetchAllBookings(0);
-            final recentBooking = bookings['open']?.firstWhere(
-              (booking) =>
-                  booking.customer.firstName == bookingRequest.firstName &&
-                  booking.customer.lastName == bookingRequest.lastName &&
-                  booking.customer.phoneNumber1 == bookingRequest.phoneNumber,
-              orElse: () => throw Exception('Booking not found'),
-            );
+          // try {
+          //   // final bookings = await fetchAllBookings(0);
+          //   final recentBooking = bookings['open']?.firstWhere(
+          //     (booking) =>
+          //         booking.customer?.firstName == bookingRequest.firstName &&
+          //         booking.customer?.lastName == bookingRequest.lastName &&
+          //         booking.customer?.phoneNumber1 == bookingRequest.phoneNumber,
+          //     orElse: () => throw Exception('Booking not found'),
+          //   );
 
-            if (recentBooking != null) {
-              if (context.mounted) {
-                custom_snackbar.CustomSnackBar.showSuccess(
-                  context,
-                  title: 'Success',
-                  message:
-                      'Booking was created successfully despite the timeout',
-                );
-              }
-              return true;
-            }
-          } catch (verifyError) {
-            developer.log('Error verifying booking: $verifyError',
-                name: 'BookingsRepository');
-          }
+          //     if (recentBooking != null) {
+          //       if (context.mounted) {
+          //         custom_snackbar.CustomSnackBar.showSuccess(
+          //           context,
+          //           title: 'Success',
+          //           message:
+          //               'Booking was created successfully despite the timeout',
+          //         );
+          //       }
+          //       return true;
+          //     }
+          //   } catch (verifyError) {
+          //     developer.log('Error verifying booking: $verifyError',
+          //         name: 'BookingsRepository');
+          //   }
         }
 
         if (context.mounted) {
@@ -285,6 +271,27 @@ class BookingsRepository {
       }
       return false;
     }
+  }
+
+//Search for customer bookings
+  Future<Map<String, dynamic>> searchCustomerBookings({
+    required String phoneNumber,
+    required String bookingType,
+    int page = 1,
+  }) async {
+    final userData = await SharedPreferencesHelper.getUserData();
+    if (userData == null) {
+      throw Exception('User Data not found. Please Login and try again');
+    }
+    final userModel = UserModel.fromJson(userData);
+    final userId = userModel.user.id.toString();
+
+    final response = await _apiService.get(
+      '${ApiService.prodEndpointBookings}/promoter/bookings/$bookingType/$userId',
+      queryParameters: {'phone_number': phoneNumber, 'page': page},
+    );
+    // Use paginated parser
+    return _parsePaginatedBookingsResponse(response.data);
   }
 
   // Prompt Booking Payment

@@ -2,70 +2,88 @@ import 'package:dio/dio.dart';
 
 class ErrorHandler {
   static String handleError(DioException error) {
-    if (error.response != null) {
-      // Check if the response contains error messages in the format provided
-      if (error.response?.data != null &&
-          error.response?.data is Map<String, dynamic>) {
-        final responseData = error.response?.data;
+    final response = error.response;
+    final statusCode = response?.statusCode;
+    final data = response?.data;
 
-        //prioritize errors field if it exists
-        if (responseData['errors'] != null) {
-          final errors = responseData['errors'];
-          if (errors is List && errors.isNotEmpty) {
-            return errors.join(', ');
-          }
-          if (errors is String) {
-            return errors; // Return single error message
-          }
-        }
-        // Handle 400 status code with specific error message
-        if (error.response?.statusCode == 400 && responseData['data'] != null) {
-          final errorMessage = responseData['data'];
-          if (errorMessage is List && errorMessage.isNotEmpty) {
-            return errorMessage.join(', '); // Join multiple error messages
-          }
-          if (errorMessage is String) {
-            return errorMessage; // Return single error message
-          }
-        }
+    // ✅ Parse error from response data
+    if (data is Map<String, dynamic>) {
+      // ✅ Check nested: data.data.errors
+      final nestedErrors = data['data'] is Map<String, dynamic>
+          ? data['data']['errors']
+          : null;
 
-        // Handle other status codes with 'message' field
-        if (responseData['message'] != null) {
-          return responseData['message'];
+      if (nestedErrors != null) {
+        if (nestedErrors is List && nestedErrors.isNotEmpty) {
+          return nestedErrors.join(', ');
+        } else if (nestedErrors is String) {
+          return nestedErrors;
         }
       }
 
-      // Fallback to status code based error messages
-      switch (error.response?.statusCode) {
-        case 400:
-          return "Bad request. Please check your input.";
-        case 401:
-          return "Unauthorized. Please log in again.";
-        case 403:
-          return "Forbidden. You don't have permission to access this resource.";
-        case 404:
-          return "Resource not found. Please try again.";
-        case 422:
-          return "Validation error. Please check your input.";
-        case 500:
-          return "Internal server error. Please try again later.";
-        case 503:
-          return "Service unavailable. Please try again later.";
-        default:
-          return "Unexpected error: ${error.response?.statusCode}. Please try again.";
+      // ✅ Check top-level: data.errors
+      final topLevelErrors = data['errors'];
+      if (topLevelErrors != null) {
+        if (topLevelErrors is List && topLevelErrors.isNotEmpty) {
+          return topLevelErrors.join(', ');
+        } else if (topLevelErrors is String) {
+          return topLevelErrors;
+        }
       }
-    } else if (error.type == DioErrorType.connectionTimeout) {
-      return "Connection timeout. Please check your internet connection.";
-    } else if (error.type == DioErrorType.receiveTimeout) {
-      return "Receive timeout. Please check your internet connection.";
-    } else if (error.type == DioErrorType.sendTimeout) {
-      return "Send timeout. Please check your internet connection.";
-    } else if (error.type == DioErrorType.cancel) {
-      return "Request was cancelled. Please try again.";
-    } else if (error.type == DioErrorType.unknown) {
-      return "Something went wrong. Please check your internet connection.";
-    } else {
-      return "An unexpected error occurred. Please try again.";
+
+      // ✅ Check top-level: data.message
+      if (data['message'] is String) {
+        return data['message'];
+      }
+
+      // ✅ Check top-level: data.data as error string/list
+      final rawData = data['data'];
+      if (rawData is List && rawData.isNotEmpty) {
+        return rawData.join(', ');
+      } else if (rawData is String) {
+        return rawData;
+      }
+    }
+
+    // ✅ Fallback based on status code
+    switch (statusCode) {
+      case 400:
+        return "Bad request. Please check your input.";
+      case 401:
+        return "Unauthorized. Please log in again.";
+      case 403:
+        return "Forbidden. You don't have permission to access this resource.";
+      case 404:
+        return "Resource not found. Please try again.";
+      case 422:
+        return "Validation error. Please check your input.";
+      case 500:
+        return "Internal server error. Please try again later.";
+      case 503:
+        return "Service unavailable. Please try again later.";
+      default:
+        if (statusCode != null) {
+          return "Unexpected error: $statusCode. Please try again.";
+        }
+    }
+
+    // ✅ Handle Dio-specific errors
+    switch (error.type) {
+      case DioErrorType.connectionTimeout:
+        return "Connection timeout. Please check your internet connection.";
+      case DioErrorType.sendTimeout:
+        return "Send timeout. Please check your internet connection.";
+      case DioErrorType.receiveTimeout:
+        return "Receive timeout. Please check your internet connection.";
+      case DioErrorType.cancel:
+        return "Request was cancelled. Please try again.";
+      case DioErrorType.badCertificate:
+        return "Bad certificate. Please check your network security.";
+      case DioErrorType.connectionError:
+      case DioErrorType.unknown:
+        return "Something went wrong. Please check your internet connection.";
+      default:
+        return "An unexpected error occurred. Please try again.";
     }
   }
 }

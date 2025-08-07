@@ -5,7 +5,6 @@ import 'package:flexpromoter/features/bookings/cubit/make_booking_cubit.dart';
 import 'package:flexpromoter/features/bookings/ui/booking_details.dart';
 import 'package:flexpromoter/features/bookings/ui/bookings.dart';
 import 'package:flexpromoter/features/bookings/ui/make_bookings.dart';
-import 'package:flexpromoter/features/bookings/ui/payment_bk.dart';
 import 'package:flexpromoter/features/commissions/cubit/commissions_cubit.dart';
 import 'package:flexpromoter/features/commissions/ui/commissions.dart';
 import 'package:flexpromoter/features/leaderboard/ui/leaderboard_screen.dart';
@@ -25,7 +24,10 @@ import 'package:flexpromoter/features/bookings/repo/bookings_repo.dart';
 // Create global Cubit instances
 final authCubit = AuthCubit(AuthRepo());
 final commissionsCubit = CommissionsCubit(repository: CommissionRepository());
-final bookingsCubit = BookingsCubit(repository: BookingsRepository());
+final bookingsCubit = BookingsCubit(
+  BookingsRepository(),
+  repository: BookingsRepository(),
+);
 
 class AppRoutes {
   static final routes = {
@@ -57,13 +59,13 @@ class AppRoutes {
           child: const BookingsScreen(),
         ),
 
-    Routes.bookingDetails: (context) => BlocProvider.value(
-          value: bookingsCubit,
-          child: const BookingDetailScreen(
-            bookings: [],
-            title: '',
-          ),
-        ),
+    // Routes.bookingDetails: (context) => BlocProvider.value(
+    //       value: bookingsCubit,
+    //       child: const BookingDetailScreen(
+    //         bookings: [],
+    //         title: '',
+    //       ),
+    //     ),
 
     Routes.commissions: (context) => BlocProvider.value(
           value: commissionsCubit,
@@ -79,16 +81,17 @@ class AppRoutes {
     //   return BookingPaymentPage(customerPhone: args, bookingReference: args,);
     // },
 
-    Routes.promptBookingPayment: (context) {
-  final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-  return BlocProvider(
-    create: (_) => BKPaymentCubit(bookingsRepository: BookingsRepository()),
-    child: BookingPaymentPage(
-      customerPhone: args['customerPhone'],
-      bookingReference: args['bookingReference'],
-    ),
-  );
-},
+//     Routes.promptBookingPayment: (context) {
+//   final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+//   return BlocProvider(
+//     create: (_) => BKPaymentCubit(bookingsRepository: BookingsRepository()),
+//     child: BookingPaymentPage(
+//       customerPhone: args['customerPhone'],
+//       bookingReference: args['bookingReference'],
+//     ),
+//   );
+// },
+//   };
   };
 }
 

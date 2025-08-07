@@ -7,6 +7,11 @@ import 'package:flexpromoter/features/bookings/cubit/bookings_state.dart';
 import 'package:flexpromoter/features/bookings/models/bookings_model.dart';
 import 'package:flexpromoter/features/bookings/ui/booking_details.dart';
 import 'package:flexpromoter/features/bookings/ui/booking_shimmer.dart';
+import 'package:flexpromoter/features/bookings/ui/search_customers.dart';
+import 'package:intl/intl.dart';
+import 'package:flexpromoter/features/bookings/ui/booking_data.dart';
+import 'package:lottie/lottie.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -16,13 +21,59 @@ class BookingsScreen extends StatefulWidget {
 }
 
 class _BookingsScreenState extends State<BookingsScreen> {
+  String selectedTag = 'Active';
+  int currentPage = 1;
+  int totalPages = 1;
+  bool _isPaginating = false;
+
+  final List<String> tags = ['Active', 'Completed', 'Redeemed', 'Unserviced'];
+  final TextEditingController _searchController =
+      TextEditingController(); // <-- Add this
+  String? _searchPhone; // Track current search
+
   @override
   void initState() {
     super.initState();
-    // Provide context to cubit and fetch bookings
     final bookingsCubit = context.read<BookingsCubit>();
-    bookingsCubit.setContext(context);
-    bookingsCubit.fetchAllBookings();
+    bookingsCubit.fetchBookingsByType(selectedTag, page: currentPage);
+  }
+
+  void _onPageChanged(int page) async {
+    setState(() {
+      _isPaginating = true;
+      currentPage = page;
+    });
+    if (_searchPhone != null && _searchPhone!.isNotEmpty) {
+      await context.read<BookingsCubit>().searchCustomerBookings(
+            phoneNumber: _searchPhone!,
+            bookingType: selectedTag,
+            page: page,
+          );
+    } else {
+      await context
+          .read<BookingsCubit>()
+          .fetchBookingsByType(selectedTag, page: page);
+    }
+    setState(() {
+      _isPaginating = false;
+    });
+  }
+
+  void _onSearch() {
+    final phone = _searchController.text.trim();
+    setState(() {
+      _searchPhone = phone.isNotEmpty ? phone : null;
+      currentPage = 1;
+    });
+    if (_searchPhone != null) {
+      context.read<BookingsCubit>().searchCustomerBookings(
+            phoneNumber: _searchPhone!,
+            bookingType: selectedTag,
+            page: 1,
+          );
+    } else {
+      context.read<BookingsCubit>().fetchBookingsByType(selectedTag, page: 1);
+    }
   }
 
   @override
@@ -31,211 +82,944 @@ class _BookingsScreenState extends State<BookingsScreen> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.black : const Color(0xFF337687),
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(size.height * 0.12),
-        child: AppBar(
-          backgroundColor: isDarkMode ? Colors.black : const Color(0xFF337687),
-          elevation: 0,
-          leading: Container(
-            padding: const EdgeInsets.only(left: 8),
-            width: 80,
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              behavior: HitTestBehavior.opaque,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 16),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      'Back',
-                      style: GoogleFonts.montserrat(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          centerTitle: true,
-          title: Text(
-            "FlexPay",
-            style: GoogleFonts.montserrat(
-              fontSize: size.width * 0.08,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.notifications, color: Colors.white),
-              onPressed: () {},
-            ),
-          ],
-        ),
-      ),
-      body: Column(
+      backgroundColor: ColorName.whiteColor,
+      body: Stack(
         children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'View Bookings',
-                  style: GoogleFonts.montserrat(
-                    fontSize: size.width * 0.06,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+          Column(
+            children: [
+              // Header with rounded corners
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/appbarbackground.png'),
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    // bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(52),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Below are your scheduled and past bookings.',
-                  style: GoogleFonts.montserrat(
-                    fontSize: size.width * 0.04,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white70,
-                  ),
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 24,
+                  right: 24,
+                  bottom: 32,
                 ),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-          Expanded(
-            child: BlocBuilder<BookingsCubit, BookingsState>(
-              builder: (context, state) {
-                if (state is BookingsLoading) {
-                  return const BookingsShimmer(isDarkMode: true);
-                }
-
-                if (state is BookingsLoaded) {
-                  return _buildBookingCards(isDarkMode, {
-                    'Active Bookings': {
-                      'data': state.openBookings,
-                      'count': state.openBookings.length,
-                    },
-                    'Completed Bookings': {
-                      'data': state.closedBookings,
-                      'count': state.closedBookings.length,
-                    },
-                    'Redeemed Bookings': {
-                      'data': state.redeemedBookings,
-                      'count': state.redeemedBookings.length,
-                    },
-                    'Unserviced Bookings': {
-                      'data': state.unservicedBookings,
-                      'count': state.unservicedBookings.length,
-                    },
-                  });
-                }
-
-                return _buildBookingCards(isDarkMode, {
-                  'Open Bookings': {'data': <Booking>[], 'count': '-'},
-                  'Closed Bookings': {'data': <Booking>[], 'count': '-'},
-                  'Redeemed Bookings': {'data': <Booking>[], 'count': '-'},
-                  'Unserviced Bookings': {'data': <Booking>[], 'count': '-'},
-                });
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBookingCards(
-      bool isDarkMode, Map<String, Map<String, dynamic>> bookingsData) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: bookingsData.entries.map((entry) {
-          final bookings = entry.value['data'] as List<Booking>;
-          final bool isClickable = bookings.isNotEmpty;
-
-          return GestureDetector(
-            onTap: isClickable
-                ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BookingDetailScreen(
-                          bookings: bookings,
-                          title: entry.key,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // AppBar Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.arrow_back_ios_new,
+                                  color: Colors.white, size: 18),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Back',
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          "FlexPay",
+                          style: GoogleFonts.montserrat(
+                            fontSize: size.width * 0.08,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.notifications,
+                              color: Colors.white),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 74),
+                    Text(
+                      'View Bookings',
+                      style: GoogleFonts.montserrat(
+                        fontSize: size.width * 0.06,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Below are your scheduled and past bookings.',
+                      style: GoogleFonts.montserrat(
+                        fontSize: size.width * 0.04,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color.fromRGBO(255, 255, 255, 1),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        style: GoogleFonts.montserrat(
+                          // <-- Add this line
+                          color: Colors.black87,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Search Booking by phone number',
+                          hintStyle: GoogleFonts.montserrat(
+                            color: Colors.grey[500],
+                            fontSize: 16,
+                          ),
+                          prefixIcon:
+                              const Icon(Icons.search, color: Colors.grey),
+                          border: InputBorder.none,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 16),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear,
+                                      color: Colors.grey),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _onSearch(); // Clear search
+                                  },
+                                )
+                              : null,
+                        ),
+                        keyboardType: TextInputType.phone,
+                        onSubmitted: (_) => _onSearch(),
+                        onChanged: (val) {
+                          if (val.isEmpty && _searchPhone != null) {
+                            _onSearch(); // Reset to normal fetch if cleared
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Tags
+              SizedBox(
+                height: 48,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: tags.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, idx) {
+                    final tag = tags[idx];
+                    final isSelected = tag == selectedTag;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedTag = tag;
+                          currentPage = 1;
+                        });
+                        if (_searchPhone != null && _searchPhone!.isNotEmpty) {
+                          context.read<BookingsCubit>().searchCustomerBookings(
+                                phoneNumber: _searchPhone!,
+                                bookingType: tag,
+                                page: 1,
+                              );
+                        } else {
+                          context
+                              .read<BookingsCubit>()
+                              .fetchBookingsByType(tag, page: 1);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF337687)
+                              : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Text(
+                          tag,
+                          style: GoogleFonts.montserrat(
+                            color: isSelected ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 15,
+                          ),
                         ),
                       ),
                     );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              //Pagination bar 
+              BlocBuilder<BookingsCubit, BookingsState>(
+                builder: (context, state) {
+                  int pages = 1;
+                  if (state is BookingsLoaded) {
+                    pages = state.totalPages;
+                  } else if (state is CustomerBookingsSearchLoaded) {
+                    pages = state.totalPages;
                   }
-                : null,
-            child: _buildStyledCard(
-              entry.key,
-              entry.value['count'].toString(),
-              isClickable ? "Tap to view details" : "No bookings available",
-              isDarkMode,
-              isClickable: isClickable,
-            ),
-          );
-        }).toList(),
+
+                  return Center(
+                    child: _isPaginating
+                        ? const SpinKitCircle(
+                            color: Color(0xFF337687),
+                            size: 32,
+                          )
+                        : _buildPaginationRow(pages),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+              BlocBuilder<BookingsCubit, BookingsState>(
+                builder: (context, state) {
+                  if (state is BookingsLoaded) {
+                    totalPages = state.totalPages;
+                  } else if (state is CustomerBookingsSearchLoaded) {
+                    totalPages = state.totalPages;
+                  }
+                  return Expanded(
+                    child: Builder(
+                      builder: (context) {
+                        if (state is BookingsLoading ||
+                            state is CustomerBookingsSearchLoading) {
+                          return const BookingsShimmer(isDarkMode: true);
+                        } else if (state is BookingsLoaded) {
+                          final bookings = state.bookings;
+                          if (bookings.isEmpty) {
+                            return Center(
+                                child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                  SizedBox(
+                                    height: 250,
+                                    child: Lottie.asset(
+                                        'assets/images/onboarding2.json'),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'No bookings found.',
+                                    style: GoogleFonts.montserrat(fontSize: 16),
+                                  ),
+                                ]));
+                          }
+                          return ListView.separated(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            itemCount: bookings.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 16),
+                            itemBuilder: (context, idx) {
+                              final booking = bookings[idx];
+                              final isRedeemed =
+                                  state.bookingType.toLowerCase() == 'redeemed';
+                              // Determine status color and icon
+                              Color statusColor;
+                              Color badgeBgColor;
+                              Color badgeTextColor;
+                              IconData statusIcon;
+                              switch (state.bookingType) {
+                                case 'Active':
+                                  statusColor =
+                                      const Color(0xFF009BFE); // Amber
+                                  badgeBgColor = const Color(0xFFFFF6D6);
+                                  badgeTextColor = const Color(0xFFFEA900);
+                                  statusIcon = Icons.verified;
+                                  break;
+                                case 'Completed':
+                                  statusColor = const Color(0xFF00C853);
+                                  badgeBgColor = const Color(0xFFD6FFD8);
+                                  badgeTextColor = const Color(0xFF00C853);
+                                  statusIcon = Icons.verified;
+                                  break;
+                                case 'Redeemed':
+                                  statusColor = const Color(0xFF757575);
+                                  badgeBgColor = const Color(0xFFE0E0E0);
+                                  badgeTextColor = const Color(0xFF757575);
+                                  statusIcon = Icons.redeem;
+                                  break;
+                                case 'Unserviced':
+                                  statusColor = const Color(0xFFD32F2F);
+                                  badgeBgColor = const Color(0xFFFFD6D6);
+                                  badgeTextColor = const Color(0xFFD32F2F);
+                                  statusIcon = Icons.error;
+                                  break;
+                                default:
+                                  statusColor = Colors.grey;
+                                  badgeBgColor = Colors.grey[300]!;
+                                  badgeTextColor = Colors.grey[700]!;
+                                  statusIcon = Icons.info;
+                              }
+
+                              return InkWell(
+                                onTap: () =>
+                                    showBookingDetails(context, booking),
+                                borderRadius: BorderRadius.circular(18),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(18),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.07),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  padding: const EdgeInsets.all(18),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      _buildNumberBadge(idx),
+                                      const SizedBox(width: 2),
+                                      // Leading Icon
+                                      CircleAvatar(
+                                        backgroundColor: Colors.white,
+                                        radius: 26,
+                                        child: Icon(
+                                          statusIcon,
+                                          color: badgeTextColor,
+                                          size: 32,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      // Main Info
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              booking.product?.productName ??
+                                                  (isRedeemed
+                                                      ? 'Redeemed Voucher'
+                                                      : 'No product name'),
+                                              style: GoogleFonts.montserrat(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 18,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                            Text(
+                                              booking.outlet?.outletName ?? '-',
+                                              style: GoogleFonts.montserrat(
+                                                fontWeight: FontWeight.w400,
+                                                fontSize: 15,
+                                                color: Colors.grey[700],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            // Progress bar
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              child: LinearProgressIndicator(
+                                                value: ((booking.totalPayments ??
+                                                            0) /
+                                                        (booking.bookingPrice ==
+                                                                0
+                                                            ? 1
+                                                            : booking
+                                                                .bookingPrice))
+                                                    .clamp(0.0, 1.0),
+                                                minHeight: 6,
+                                                backgroundColor:
+                                                    Colors.grey[200],
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                        Color>(statusColor),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    'Ref:  ${booking.bookingReference ?? '-'}',
+                                                    style:
+                                                        GoogleFonts.montserrat(
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      fontSize: 13,
+                                                      color: Colors.black87,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Flexible(
+                                                  child: Text(
+                                                    'Paid: Ksh ${booking.totalPayments}',
+                                                    style:
+                                                        GoogleFonts.montserrat(
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      fontSize: 13,
+                                                      color: Colors.black87,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      // Badge and Status
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: badgeBgColor,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  statusIcon,
+                                                  color: badgeTextColor,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  state.bookingType == 'Active'
+                                                      ? '${(((booking.totalPayments ?? 0) / (booking.bookingPrice == 0 ? 1 : booking.bookingPrice)) * 100).clamp(0, 100).toInt()}%'
+                                                      : state.bookingType ==
+                                                              'Completed'
+                                                          ? '100%'
+                                                          : state.bookingType ==
+                                                                  'Redeemed'
+                                                              ? 'Redeemed'
+                                                              : state.bookingType ==
+                                                                      'Unserviced'
+                                                                  ? '0%'
+                                                                  : '',
+                                                  style: GoogleFonts.montserrat(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
+                                                    color: badgeTextColor,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            state.bookingType.toLowerCase(),
+                                            style: GoogleFonts.montserrat(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 13,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        } else if (state is CustomerBookingsSearchLoaded) {
+                          final bookings = state.bookings;
+                          if (bookings.isEmpty) {
+                            return Center(
+                                child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                  SizedBox(
+                                    height: 250,
+                                    child: Lottie.asset(
+                                        'assets/images/onboarding2.json'),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'No bookings found.',
+                                    style: GoogleFonts.montserrat(fontSize: 16),
+                                  ),
+                                ]));
+                          }
+                          return ListView.separated(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            itemCount: bookings.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 16),
+                            itemBuilder: (context, idx) {
+                              final booking = bookings[idx];
+                              final isRedeemed =
+                                  state.bookingType.toLowerCase() == 'redeemed';
+                              // Determine status color and icon
+                              Color statusColor;
+                              Color badgeBgColor;
+                              Color badgeTextColor;
+                              IconData statusIcon;
+                              switch (state.bookingType) {
+                                case 'Active':
+                                  statusColor =
+                                      const Color(0xFF009BFE); // Amber
+                                  badgeBgColor = const Color(0xFFFFF6D6);
+                                  badgeTextColor = const Color(0xFFFEA900);
+                                  statusIcon = Icons.verified;
+                                  break;
+                                case 'Completed':
+                                  statusColor = const Color(0xFF00C853);
+                                  badgeBgColor = const Color(0xFFD6FFD8);
+                                  badgeTextColor = const Color(0xFF00C853);
+                                  statusIcon = Icons.verified;
+                                  break;
+                                case 'Redeemed':
+                                  statusColor = const Color(0xFF757575);
+                                  badgeBgColor = const Color(0xFFE0E0E0);
+                                  badgeTextColor = const Color(0xFF757575);
+                                  statusIcon = Icons.redeem;
+                                  break;
+                                case 'Unserviced':
+                                  statusColor = const Color(0xFFD32F2F);
+                                  badgeBgColor = const Color(0xFFFFD6D6);
+                                  badgeTextColor = const Color(0xFFD32F2F);
+                                  statusIcon = Icons.error;
+                                  break;
+                                default:
+                                  statusColor = Colors.grey;
+                                  badgeBgColor = Colors.grey[300]!;
+                                  badgeTextColor = Colors.grey[700]!;
+                                  statusIcon = Icons.info;
+                              }
+
+                              return InkWell(
+                                onTap: () =>
+                                    showBookingDetails(context, booking),
+                                borderRadius: BorderRadius.circular(18),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(18),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.07),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  padding: const EdgeInsets.all(18),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      _buildNumberBadge(idx),
+                                      const SizedBox(width: 2),
+                                      // Leading Icon
+                                      CircleAvatar(
+                                        backgroundColor: Colors.white,
+                                        radius: 26,
+                                        child: Icon(
+                                          statusIcon,
+                                          color: badgeTextColor,
+                                          size: 32,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      // Main Info
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              booking.product?.productName ??
+                                                  (isRedeemed
+                                                      ? 'Redeemed Voucher'
+                                                      : 'No product name'),
+                                              style: GoogleFonts.montserrat(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 18,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                            Text(
+                                              booking.outlet?.outletName ?? '-',
+                                              style: GoogleFonts.montserrat(
+                                                fontWeight: FontWeight.w400,
+                                                fontSize: 15,
+                                                color: Colors.grey[700],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            // Progress bar
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              child: LinearProgressIndicator(
+                                                value: ((booking.totalPayments ??
+                                                            0) /
+                                                        (booking.bookingPrice ==
+                                                                0
+                                                            ? 1
+                                                            : booking
+                                                                .bookingPrice))
+                                                    .clamp(0.0, 1.0),
+                                                minHeight: 6,
+                                                backgroundColor:
+                                                    Colors.grey[200],
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                        Color>(statusColor),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    'Ref:  ${booking.bookingReference ?? '-'}',
+                                                    style:
+                                                        GoogleFonts.montserrat(
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      fontSize: 13,
+                                                      color: Colors.black87,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Flexible(
+                                                  child: Text(
+                                                    'Paid: Ksh ${booking.totalPayments}',
+                                                    style:
+                                                        GoogleFonts.montserrat(
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      fontSize: 13,
+                                                      color: Colors.black87,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      // Badge and Status
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: badgeBgColor,
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  statusIcon,
+                                                  color: badgeTextColor,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  state.bookingType == 'Active'
+                                                      ? '${(((booking.totalPayments ?? 0) / (booking.bookingPrice == 0 ? 1 : booking.bookingPrice)) * 100).clamp(0, 100).toInt()}%'
+                                                      : state.bookingType ==
+                                                              'Completed'
+                                                          ? '100%'
+                                                          : state.bookingType ==
+                                                                  'Redeemed'
+                                                              ? 'Redeemed'
+                                                              : state.bookingType ==
+                                                                      'Unserviced'
+                                                                  ? '0%'
+                                                                  : '',
+                                                  style: GoogleFonts.montserrat(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
+                                                    color: badgeTextColor,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            state.bookingType.toLowerCase(),
+                                            style: GoogleFonts.montserrat(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 13,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        } else if (state is BookingsError ||
+                            state is CustomerBookingsSearchError) {
+                          final msg = state is BookingsError
+                              ? state.message
+                              : (state as CustomerBookingsSearchError).message;
+                          return Center(
+                            child: Text(
+                              msg,
+                              style: GoogleFonts.montserrat(color: Colors.red),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStyledCard(
-      String title, String value, String message, bool isDarkMode,
-      {bool isClickable = true}) {
+  Widget _buildNumberBadge(int index) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      padding: const EdgeInsets.all(20.0),
+      width: 28,
+      height: 28,
       decoration: BoxDecoration(
-        color: isDarkMode
-            ? (isClickable ? Colors.grey[900] : Colors.grey[800])
-            : ColorName.whiteColor.withOpacity(isClickable ? 0.90 : 0.70),
-        borderRadius: BorderRadius.circular(15.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        color: const Color(0xFF337687),
+        borderRadius: BorderRadius.circular(14),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.montserrat(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: isDarkMode ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: GoogleFonts.montserrat(
-              fontSize: 14,
-              color: isDarkMode ? Colors.white70 : Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: Text(
-              value,
-              style: GoogleFonts.montserrat(
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.white : Colors.black87,
-              ),
-            ),
-          ),
+      alignment: Alignment.center,
+      child: Text(
+        '#${index + 1}',
+        style: GoogleFonts.montserrat(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditablePageInput(int currentPage, int totalPages) {
+  final controller = TextEditingController(text: currentPage.toString());
+  final focusNode = FocusNode();
+  
+  return SizedBox(
+    width: 48,
+    height: 36,
+    child: TextField(
+      controller: controller,
+      focusNode: focusNode,
+      textAlign: TextAlign.center,
+      style: GoogleFonts.montserrat(
+        color: Colors.white,
+        fontWeight: FontWeight.w500,
+      ),
+      keyboardType: TextInputType.number,
+      cursorColor: Colors.white, // Add cursor color
+      decoration: InputDecoration(
+        contentPadding: EdgeInsets.zero,
+        filled: true,
+        fillColor: const Color(0xFF337687),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: Color(0xFF337687)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: Color(0xFF337687)),
+        ),
+        // Add cursor indicator
+        suffixIcon: const Icon(Icons.edit, size: 16, color: Colors.white70),
+        suffixIconConstraints: const BoxConstraints(
+          maxHeight: 16,
+          maxWidth: 16,
+        ),
+      ),
+      onSubmitted: (value) {
+        final page = int.tryParse(value) ?? currentPage;
+        if (page >= 1 && page <= totalPages && page != currentPage) {
+          _onPageChanged(page.clamp(1, totalPages));
+        } else {
+          // Reset to current page if invalid
+          controller.text = currentPage.toString();
+        }
+      },
+      onTap: () {
+        controller.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: controller.text.length,
+        );
+      },
+    ),
+  );
+}
+
+Widget _buildPageButton(int page) {
+  return GestureDetector(
+    onTap: () {
+      if (page != currentPage) _onPageChanged(page);
+    },
+    child: Container(
+      width: 36,
+      height: 36,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: page == currentPage
+            ? const Color(0xFF337687)
+            : Colors.transparent,
+        border: Border.all(
+          color: const Color(0xFF337687),
+        ),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        '$page',
+        style: GoogleFonts.montserrat(
+          color: page == currentPage
+              ? Colors.white
+              : const Color(0xFF337687),
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    ),
+  );
+}
+
+
+Widget _buildPaginationRow(int pages) {
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildPaginationButton("Previous", currentPage > 1, () {
+          if (currentPage > 1) _onPageChanged(currentPage - 1);
+        }),
+        const SizedBox(width: 8),
+        
+        // First page - make editable when current
+        currentPage == 1 
+            ? _buildEditablePageInput(1, pages)
+            : _buildPageButton(1),
+        
+        if (currentPage > 4) const SizedBox(width: 8),
+        if (currentPage > 4) 
+          Text('...', style: GoogleFonts.montserrat(color: const Color(0xFF337687))),
+
+        // Show pages around current page
+        if (currentPage > 2 && currentPage != pages) ...[
+          const SizedBox(width: 8),
+          currentPage - 1 == 1 
+              ? _buildPageButton(1) // Don't duplicate first page
+              : _buildPageButton(currentPage - 1),
         ],
+        if (currentPage > 1 && currentPage < pages) ...[
+          const SizedBox(width: 8),
+          _buildEditablePageInput(currentPage, pages),
+        ],
+        if (currentPage < pages - 1 && currentPage != 1) ...[
+          const SizedBox(width: 8),
+          currentPage + 1 == pages 
+              ? _buildPageButton(pages) // Don't duplicate last page
+              : _buildPageButton(currentPage + 1),
+        ],
+
+        if (currentPage < pages - 3) const SizedBox(width: 8),
+        if (currentPage < pages - 3)
+          Text('...', style: GoogleFonts.montserrat(color: const Color(0xFF337687))),
+
+        // Last page - make editable when current
+        if (pages > 1) ...[
+          const SizedBox(width: 8),
+          currentPage == pages 
+              ? _buildEditablePageInput(pages, pages)
+              : _buildPageButton(pages),
+        ],
+        
+        const SizedBox(width: 8),
+        _buildPaginationButton("Next", currentPage < pages, () {
+          if (currentPage < pages) _onPageChanged(currentPage + 1);
+        }),
+      ],
+    ),
+  );
+}
+
+  Widget _buildPaginationButton(
+      String label, bool enabled, VoidCallback onPressed) {
+    return GestureDetector(
+      onTap: enabled ? onPressed : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: enabled ? Colors.transparent : Colors.grey[300],
+          border: Border.all(
+            color: const Color(0xFF337687),
+          ),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.montserrat(
+            color: enabled ? const Color(0xFF337687) : Colors.grey,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
     );
   }

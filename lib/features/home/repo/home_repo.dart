@@ -36,10 +36,16 @@ class HomeRepo {
       }
 
       // Parse booking data
-      final productBooking = bookingResponse.data['data']?['product_booking'];
+      final productBooking = bookingResponse.data['data'];
       if (productBooking == null) {
-        throw Exception('No booking found for receipt $slipNo');
-      }
+          // Let the validation endpoint handle the invalid slip
+          developer.log('No booking found — skipping validation step.');
+          return {
+            "data": {
+              "errors": ["No booking found for receipt $slipNo"],
+            }
+          };
+        }
 
       final bookingReference = productBooking['booking_reference']?.toString();
       final bookingPrice = productBooking['booking_price'].toString();
@@ -73,33 +79,67 @@ class HomeRepo {
         '${ApiService.prodEndpointBookings}/promoters/validate-receipt',
         data: validationData,
       );
+      final responseData = validationResponse.data;
+developer.log('Validation response: $responseData');
+
+// ✅ Check for nested errors even on success responses
+final nestedErrors = responseData['data']?['errors'];
+if (nestedErrors != null) {
+  if (nestedErrors is List && nestedErrors.isNotEmpty) {
+    throw DioException(
+      requestOptions: validationResponse.requestOptions,
+      response: Response(
+        requestOptions: validationResponse.requestOptions,
+        statusCode: 422, // simulate validation failure
+        data: {"data": {"errors": nestedErrors}},
+      ),
+      type: DioErrorType.badResponse,
+    );
+  } else if (nestedErrors is String && nestedErrors.isNotEmpty) {
+    throw DioException(
+      requestOptions: validationResponse.requestOptions,
+      response: Response(
+        requestOptions: validationResponse.requestOptions,
+        statusCode: 422,
+        data: {"data": {"errors": [nestedErrors]}},
+      ),
+      type: DioErrorType.badResponse,
+    );
+  }
+}
+
+return responseData;
 
       developer.log('Validation response: ${validationResponse.data}');
-
-      if (validationResponse.statusCode == 200 ||
-          validationResponse.statusCode == 201) {
-        developer.log('✅ Receipt validated successfully');
-        return validationResponse.data;
-      } else {
-        // Extract backend error details
-        final errorDetails = validationResponse.data['data'] ?? {};
-        final errorMessage = errorDetails.entries
-            .map((entry) => '${entry.key}: ${entry.value.join(', ')}')
-            .join('; ');
-
-        final errorMsg = errorMessage.isNotEmpty
-            ? errorMessage
-            : 'Validation failed (Status: ${validationResponse.statusCode})';
-
-        developer.log('❌ Receipt validation error: $errorMsg');
-        throw Exception(errorMsg);
-      }
+      return validationResponse.data;
     } catch (e) {
       developer.log('❌ Receipt validation error: $e');
-      rethrow; // Pass the error up to the caller
+      rethrow;
     }
-  }
 
+    //   if (validationResponse.statusCode == 200 ||
+    //       validationResponse.statusCode == 201) {
+    //     developer.log('✅ Receipt validated successfully');
+    //     return validationResponse.data;
+    //   } else {
+    //     // Extract backend error details
+    //     final errorDetails = validationResponse.data['data'] ?? {};
+    //     final errorMessage = errorDetails.entries
+    //         .map((entry) => '${entry.key}: ${entry.value.join(', ')}')
+    //         .join('; ');
+
+    //     final errorMsg = errorMessage.isNotEmpty
+    //         ? errorMessage
+    //         : 'Validation failed (Status: ${validationResponse.statusCode})';
+
+    //     developer.log('❌ Receipt validation error: $errorMsg');
+    //     throw Exception(errorMsg);
+    //   }
+    // } catch (e) {
+    //   developer.log('❌ Receipt validation error: $e');
+    //   rethrow; // Pass the error up to the caller
+    // }
+  }
 
 //Delete Account Function
   Future<Response> deleteAccount() async {

@@ -1,4 +1,3 @@
-//Booking Model
 class Booking {
   final int id;
   final String bookingReference;
@@ -9,7 +8,7 @@ class Booking {
   final int productId;
   final int outletId;
   final int userId;
-  final int? totalPayments;
+  final int totalPayments;
   final List<dynamic> bookingInterest;
   final int interestAmount;
   final String maturityDate;
@@ -17,10 +16,11 @@ class Booking {
   final String? chamaDescription;
   final String? image;
   final int progress;
-  final Customer customer;
-  final Product product;
-  final Outlet outlet;
+  final Customer? customer;
+  final Product? product;
+  final Outlet? outlet;
   final List<Payment> payment;
+  final String? customerPhoneNum;
 
   Booking({
     required this.id,
@@ -32,7 +32,7 @@ class Booking {
     required this.productId,
     required this.outletId,
     required this.userId,
-    this.totalPayments,
+    required this.totalPayments,
     required this.bookingInterest,
     required this.interestAmount,
     required this.maturityDate,
@@ -40,71 +40,87 @@ class Booking {
     this.chamaDescription,
     this.image,
     required this.progress,
-    required this.customer,
-    required this.product,
-    required this.outlet,
+    this.customer,
+    this.product,
+    this.outlet,
     required this.payment,
+    required this.customerPhoneNum,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
-      id: int.tryParse(json['id'].toString()) ?? 0,
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       bookingReference: json['booking_reference']?.toString() ?? '',
-      bookingPrice: int.tryParse(json['booking_price'].toString()) ?? 0,
+      bookingPrice: int.tryParse(json['booking_price']?.toString() ?? '') ?? 0,
       createdAt: json['created_at']?.toString() ?? '',
       updatedAt: json['updated_at']?.toString() ?? '',
       bookingStatus: json['booking_status']?.toString() ?? '',
-      productId: int.tryParse(json['product_id'].toString()) ?? 0,
-      outletId: int.tryParse(json['outlet_id'].toString()) ?? 0,
-      userId: int.tryParse(json['user_id'].toString()) ?? 0,
-      totalPayments: json['total_payments'] != null
-          ? int.tryParse(json['total_payments'].toString())
-          : null,
-      bookingInterest: json['booking_interest'] ?? [],
-      interestAmount: int.tryParse(json['interest_amount'].toString()) ?? 0,
+      productId: int.tryParse(json['product_id']?.toString() ?? '') ?? 0,
+      outletId: int.tryParse(json['outlet_id']?.toString() ?? '') ?? 0,
+      userId: int.tryParse(json['user_id']?.toString() ?? '') ?? 0,
+      totalPayments:
+          int.tryParse(json['total_payments']?.toString() ?? '') ?? 0,
+      bookingInterest: (json['booking_interest'] as List?) ?? [],
+      interestAmount:
+          int.tryParse(json['interest_amount']?.toString() ?? '') ?? 0,
       maturityDate: json['maturity_date']?.toString() ?? '',
-      targetSaving: int.tryParse(json['target_saving'].toString()) ?? 0,
+      targetSaving: int.tryParse(json['target_saving']?.toString() ?? '') ?? 0,
       chamaDescription: json['chama_description']?.toString(),
       image: json['image']?.toString(),
-      progress: int.tryParse(json['progress'].toString()) ?? 0,
-      customer: Customer.fromJson(json['customer'] ?? {}),
-      product: Product.fromJson(json['product'] ?? {}),
-      outlet: Outlet.fromJson(json['outlet'] ?? {}),
-      payment: (json['payment'] as List?)
-              ?.map((p) => Payment.fromJson(p))
-              .toList() ??
-          [],
+      progress: int.tryParse(json['progress']?.toString() ?? '') ?? 0,
+      customer: json['customer'] is Map
+          ? Customer.fromJson(Map<String, dynamic>.from(json['customer']))
+          : null,
+      customerPhoneNum: json['customer_phone_number']?.toString() ?? '',
+      product: (json['product_name'] != null)
+          ? Product(
+              id: json['product_id'] ?? 0,
+              productName: json['product_name']?.toString() ?? '',
+              maturityDate: null,
+              targetSaving: 0,
+              chamaDescription: null,
+            )
+          : null,
+      outlet: (json['outlet_name'] != null)
+          ? Outlet(
+              id: json['outlet_id'] ?? 0,
+              outletName: json['outlet_name']?.toString() ?? '',
+            )
+          : null,
+      payment: (json['payment'] is List)
+          ? (json['payment'] as List)
+              .whereType<Map<String, dynamic>>()
+              .map((p) => Payment.fromJson(p))
+              .toList()
+          : [],
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'booking_reference': bookingReference,
-      'booking_price': bookingPrice,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
-      'booking_status': bookingStatus,
-      'product_id': productId,
-      'outlet_id': outletId,
-      'user_id': userId,
-      'total_payments': totalPayments,
-      'booking_interest': bookingInterest,
-      'interest_amount': interestAmount,
-      'maturity_date': maturityDate,
-      'target_saving': targetSaving,
-      'chama_description': chamaDescription,
-      'image': image,
-      'progress': progress,
-      'customer': customer.toJson(),
-      'product': product.toJson(),
-      'outlet': outlet.toJson(),
-      'payment': payment.map((p) => p.toJson()).toList(),
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'booking_reference': bookingReference,
+        'booking_price': bookingPrice,
+        'created_at': createdAt,
+        'updated_at': updatedAt,
+        'booking_status': bookingStatus,
+        'product_id': productId,
+        'outlet_id': outletId,
+        'user_id': userId,
+        'total_payments': totalPayments,
+        'booking_interest': bookingInterest,
+        'interest_amount': interestAmount,
+        'maturity_date': maturityDate,
+        'target_saving': targetSaving,
+        'chama_description': chamaDescription,
+        'image': image,
+        'progress': progress,
+        'customer': customer?.toJson(),
+        'product': product?.toJson(),
+        'outlet': outlet?.toJson(),
+        'payment': payment.map((p) => p.toJson()).toList(),
+      };
 }
 
-//Customer Model
 class Customer {
   final int id;
   final int countryId;
@@ -191,37 +207,37 @@ class Customer {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'country_id': countryId,
-      'user_id': userId,
-      'referral_id': referralId,
-      'first_name': firstName,
-      'last_name': lastName,
-      'phone_number_1': phoneNumber1,
-      'mpesa_customer_id': mpesaCustomerId,
-      'phone_number_2': phoneNumber2,
-      'id_number': idNumber,
-      'passport_number': passportNumber,
-      'dob': dob,
-      'gender': gender,
-      'country': country,
-      'customer_longitude': customerLongitude,
-      'customer_latitude': customerLatitude,
-      'pin': pin,
-      'deleted_at': deletedAt,
-      'created_at': createdAt,
-      'updated_at': updatedAt,
-      'stripe_customer_id': stripeCustomerId,
-      'score_has_been_computed': scoreHasBeenComputed,
-      'referral_code': referralCode,
-      'is_flexsave_customer': isFlexsaveCustomer,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'country_id': countryId,
+        'user_id': userId,
+        'referral_id': referralId,
+        'first_name': firstName,
+        'last_name': lastName,
+        'phone_number_1': phoneNumber1,
+        'mpesa_customer_id': mpesaCustomerId,
+        'phone_number_2': phoneNumber2,
+        'id_number': idNumber,
+        'passport_number': passportNumber,
+        'dob': dob,
+        'gender': gender,
+        'country': country,
+        'customer_longitude': customerLongitude,
+        'customer_latitude': customerLatitude,
+        'pin': pin,
+        'deleted_at': deletedAt,
+        'created_at': createdAt,
+        'updated_at': updatedAt,
+        'stripe_customer_id': stripeCustomerId,
+        'score_has_been_computed': scoreHasBeenComputed,
+        'referral_code': referralCode,
+        'is_flexsave_customer': isFlexsaveCustomer,
+      };
+
+  @override
+  String toString() => '$firstName $lastName';
 }
 
-//Product Model
 class Product {
   final int id;
   final String productName;
@@ -247,18 +263,18 @@ class Product {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'product_name': productName,
-      'maturity_date': maturityDate,
-      'target_saving': targetSaving,
-      'chama_description': chamaDescription,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'product_name': productName,
+        'maturity_date': maturityDate,
+        'target_saving': targetSaving,
+        'chama_description': chamaDescription,
+      };
+
+  @override
+  String toString() => productName;
 }
 
-//Outlet Model
 class Outlet {
   final int id;
   final String outletName;
@@ -275,15 +291,15 @@ class Outlet {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'outlet_name': outletName,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'outlet_name': outletName,
+      };
+
+  @override
+  String toString() => outletName;
 }
 
-//Payment Model
 class Payment {
   final int id;
   final int bookingId;
@@ -305,14 +321,13 @@ class Payment {
       createdAt: json['created_at']?.toString() ?? '',
     );
   }
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'booking_id': bookingId,
-      'payment_amount': paymentAmount,
-      'created_at': createdAt,
-    };
-  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'booking_id': bookingId,
+        'payment_amount': paymentAmount,
+        'created_at': createdAt,
+      };
 }
 
 //Prompt Models

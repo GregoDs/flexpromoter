@@ -1,94 +1,89 @@
-import 'package:flutter/material.dart';
+import 'package:flexpromoter/exports.dart';
+import 'package:flexpromoter/utils/services/error_handler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flexpromoter/features/bookings/cubit/bookings_state.dart';
-import 'package:flexpromoter/features/bookings/models/bookings_model.dart';
 import 'package:flexpromoter/features/bookings/repo/bookings_repo.dart';
-import 'package:flexpromoter/utils/widgets/scaffold_messengers.dart';
+import 'package:flexpromoter/features/bookings/models/bookings_model.dart';
+import 'package:flexpromoter/features/bookings/cubit/bookings_state.dart';
 
 class BookingsCubit extends Cubit<BookingsState> {
   final BookingsRepository _repository;
-  BuildContext? _context;
 
-  BookingsCubit({required BookingsRepository repository})
-      : _repository = repository,
-        super(const BookingsInitial());
+  BookingsCubit(this._repository, {required BookingsRepository repository})
+      : super(BookingsInitial());
 
-  void setContext(BuildContext context) {
-    _context = context;
-  }
-
-  // Fetch all bookings
-  Future<void> fetchAllBookings() async {
-    try {
-      emit(const BookingsLoading());
-
-      final bookings = await _repository.fetchAllBookings(0);
-
-      // Even if we get an error, we'll show empty lists instead of null
-      emit(BookingsLoaded.fromMap({
-        'open': bookings['open'] ?? [],
-        'closed': bookings['closed'] ?? [],
-        'redeemed': bookings['redeemed'] ?? [],
-        'unserviced': bookings['unserviced'] ?? [],
-      }));
-    } catch (e) {
-      // Emit empty lists for the UI to show dashes
-      emit(BookingsLoaded.fromMap({
-        'open': [],
-        'closed': [],
-        'redeemed': [],
-        'unserviced': [],
-      }));
-
-      // Show error message using custom scaffold
-      if (_context != null) {
-        String errorMessage = e.toString();
-        // If the error message contains a response from the backend, extract it
-        if (errorMessage.contains('Error fetching bookings:')) {
-          errorMessage =
-              errorMessage.replaceAll('Error fetching bookings:', '').trim();
-        }
-
-        CustomSnackBar.showError(
-          _context!,
-          title: 'Error Fetching Bookings',
-          message: errorMessage,
-        );
-      }
+  // Add this mapping function
+  String _mapTagToBackendType(String tag) {
+    switch (tag.toLowerCase()) {
+      case 'active':
+        return 'open';
+      case 'completed':
+        return 'closed';
+      case 'redeemed':
+        return 'redeemed';
+      case 'unserviced':
+        return 'unserviced';
+      default:
+        return tag.toLowerCase();
     }
   }
 
-  // Filter bookings by type
-  void filterBookings(String type) {
-    final currentState = state;
-    if (currentState is BookingsLoaded) {
-      List<Booking> filteredBookings;
-      switch (type.toLowerCase()) {
+  Future<void> fetchBookingsByType(String type, {int page = 1}) async {
+    emit(BookingsLoading());
+
+    try {
+      final backendType = _mapTagToBackendType(type);
+      Map<String, dynamic> result;
+      switch (backendType) {
         case 'open':
-          filteredBookings = currentState.openBookings;
+          result = await _repository.fetchOpenBookings(page: page);
           break;
         case 'closed':
-          filteredBookings = currentState.closedBookings;
+          result = await _repository.fetchClosedBookings(page: page);
           break;
         case 'redeemed':
-          filteredBookings = currentState.redeemedBookings;
+          result = await _repository.fetchRedeemedBookings(page: page);
           break;
         case 'unserviced':
-          filteredBookings = currentState.unservicedBookings;
+          result = await _repository.fetchUnservicedBookings(page: page);
           break;
         default:
-          filteredBookings = [];
+          result = {'bookings': <Booking>[], 'totalPages': 1};
       }
 
-      emit(BookingsFiltered(
-        filteredBookings: filteredBookings,
-        filterType: type,
+      emit(BookingsLoaded(
+        bookings: result['bookings'] as List<Booking>,
+        bookingType: type,
+        totalPages: result['totalPages'] as int,
       ));
+    } catch (e) {
+      emit(BookingsError('Failed to load $type bookings. ${e.toString()}'));
     }
   }
 
-  // Reset to initial state
-  void reset() {
-    emit(const BookingsInitial());
+  Future<void> searchCustomerBookings({
+    required String phoneNumber,
+    required String bookingType,
+    int page = 1,
+  }) async {
+    emit(CustomerBookingsSearchLoading());
+    try {
+      final backendType = _mapTagToBackendType(bookingType);
+      final result = await _repository.searchCustomerBookings(
+        phoneNumber: phoneNumber,
+        bookingType: backendType,
+        page: page,
+      );
+      emit(CustomerBookingsSearchLoaded(
+        bookings: result['bookings'] as List<Booking>,
+        bookingType: bookingType,
+        totalPages: result['totalPages'] as int,
+      ));
+    } catch (e) {
+      emit(CustomerBookingsSearchError(ErrorHandler.handleError(
+        e is DioException
+            ? e
+            : DioException(requestOptions: RequestOptions(path: '')),
+      )));
+    }
   }
 }

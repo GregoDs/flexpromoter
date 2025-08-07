@@ -1,64 +1,63 @@
+import 'package:equatable/equatable.dart';
 import 'package:flexpromoter/features/bookings/models/bookings_model.dart';
 
-sealed class BookingsState {
+abstract class BookingsState extends Equatable {
   const BookingsState();
+
+  @override
+  List<Object?> get props => [];
 }
 
-// Initial state
-class BookingsInitial extends BookingsState {
-  const BookingsInitial();
-}
+class BookingsInitial extends BookingsState {}
 
-// Loading states
-class BookingsLoading extends BookingsState {
-  const BookingsLoading();
-}
+class BookingsLoading extends BookingsState {}
 
-// Success states
 class BookingsLoaded extends BookingsState {
-  final Map<String, List<Booking>> bookings;
-  final List<Booking> openBookings;
-  final List<Booking> closedBookings;
-  final List<Booking> redeemedBookings;
-  final List<Booking> unservicedBookings;
+  final List<Booking> bookings;
+  final String bookingType;
+  final int totalPages;
 
   const BookingsLoaded({
     required this.bookings,
-    required this.openBookings,
-    required this.closedBookings,
-    required this.redeemedBookings,
-    required this.unservicedBookings,
+    required this.bookingType,
+    required this.totalPages,
   });
 
-  factory BookingsLoaded.fromMap(Map<String, List<Booking>> bookingsMap) {
-    return BookingsLoaded(
-      bookings: bookingsMap,
-      openBookings: bookingsMap['open'] ?? [],
-      closedBookings: bookingsMap['closed'] ?? [],
-      redeemedBookings: bookingsMap['redeemed'] ?? [],
-      unservicedBookings: bookingsMap['unserviced'] ?? [],
-    );
-  }
+  @override
+  List<Object?> get props => [bookings, bookingType, totalPages];
 }
 
-// Error states
 class BookingsError extends BookingsState {
   final String message;
+
   const BookingsError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
 
-// Empty states
-class BookingsEmpty extends BookingsState {
-  const BookingsEmpty();
-}
+class CustomerBookingsSearchLoading extends BookingsState {}
 
-// Filter states
-class BookingsFiltered extends BookingsState {
-  final List<Booking> filteredBookings;
-  final String filterType;
+class CustomerBookingsSearchLoaded extends BookingsState {
+  final List<Booking> bookings;
+  final String bookingType;
+  final int totalPages;
 
-  const BookingsFiltered({
-    required this.filteredBookings,
-    required this.filterType,
+  const CustomerBookingsSearchLoaded({
+    required this.bookings,
+    required this.bookingType,
+    required this.totalPages,
   });
+
+  @override
+  List<Object?> get props => [bookings, bookingType, totalPages];
+}
+
+class CustomerBookingsSearchError extends BookingsState {
+  final String message;
+
+  const CustomerBookingsSearchError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }

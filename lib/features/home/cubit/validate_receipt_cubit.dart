@@ -1,4 +1,6 @@
 import 'dart:developer' as developer;
+import 'package:flexpromoter/exports.dart' hide CustomSnackBar;
+import 'package:flexpromoter/utils/services/error_handler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 
@@ -15,33 +17,42 @@ class ValidateReceiptCubit extends Cubit<ValidateReceiptState> {
       : super(const ValidateReceiptInitial());
 
   Future<void> validateReceipt(ValidateReceiptModel model) async {
-    developer.log('Validating receipt with slip: ${model.slipNo}');
-    emit(const ValidateReceiptLoading());
-    try {
-      final response = await _homeRepo.validateReceipt(
-        slipNo: model.slipNo,
-      );
+  developer.log('Validating receipt with slip: ${model.slipNo}');
+  emit(const ValidateReceiptLoading());
 
-      developer.log('Receipt validation successful: $response');
+  try {
+    final response = await _homeRepo.validateReceipt(slipNo: model.slipNo);
 
-      CustomSnackBar.showSuccess(
-        context,
-        title: 'Success',
-        message: 'Receipt validated successfully!',
-      );
+    developer.log('✅ Receipt validation successful: $response');
 
-      emit(ValidateReceiptSuccess(response));
-    } catch (e) {
-      developer.log('Error validating receipt: $e');
+    CustomSnackBar.showSuccess(
+      context,
+      title: 'Success',
+      message: 'Receipt validated successfully!',
+    );
 
-      CustomSnackBar.showError(
-        context,
-        title: 'Error',
-        message:
-            e.toString().replaceAll('Exception: ', ''), // Show backend error
-      );
+    emit(ValidateReceiptSuccess(response));
+  } on DioException catch (dioError) {
+    final message = ErrorHandler.handleError(dioError);
+    developer.log('❌ Dio error: $message');
 
-      emit(ValidateReceiptError(e.toString()));
-    }
+    CustomSnackBar.showError(
+      context,
+      title: 'Validation Failed',
+      message: message,
+    );
+
+    emit(ValidateReceiptError(message));
+  } catch (e) {
+    developer.log('❌ Unknown error: $e');
+
+    CustomSnackBar.showError(
+      context,
+      title: 'Error',
+      message: e.toString().replaceAll('Exception: ', ''),
+    );
+
+    emit(ValidateReceiptError(e.toString()));
   }
+}
 }
