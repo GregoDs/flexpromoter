@@ -5,6 +5,8 @@ import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
 import 'package:dio/dio.dart';
 import 'dart:core';
 
+import 'package:flexpromoter/utils/services/logger.dart';
+
 class HomeRepo {
   final ApiService _apiService = ApiService();
 
@@ -18,10 +20,10 @@ class HomeRepo {
 
       final userModel = UserModel.fromJson(userData);
       final localUserId = userModel.user.id.toString();
-      developer.log('User ID loaded from SharedPreferences: $localUserId');
+      AppLogger.log('User ID loaded from SharedPreferences: $localUserId');
 
       // Fetch booking details
-      developer.log('Fetching booking details for receipt: $slipNo');
+      AppLogger.log('Fetching booking details for receipt: $slipNo');
       final bookingResponse = await _apiService.post(
         '${ApiService.prodEndpointBookings}/booking/by-receipt',
         data: {
@@ -38,14 +40,14 @@ class HomeRepo {
       // Parse booking data
       final productBooking = bookingResponse.data['data'];
       if (productBooking == null) {
-          // Let the validation endpoint handle the invalid slip
-          developer.log('No booking found — skipping validation step.');
-          return {
-            "data": {
-              "errors": ["No booking found for receipt $slipNo"],
-            }
-          };
-        }
+        // Let the validation endpoint handle the invalid slip
+        AppLogger.log('No booking found — skipping validation step.');
+        return {
+          "data": {
+            "errors": ["No booking found for receipt $slipNo"],
+          }
+        };
+      }
 
       final bookingReference = productBooking['booking_reference']?.toString();
       final bookingPrice = productBooking['booking_price'].toString();
@@ -62,7 +64,7 @@ class HomeRepo {
         throw Exception('Invalid user ID in booking');
       }
 
-      developer.log(
+      AppLogger.log(
           'Booking data: Reference=$bookingReference, Price=$bookingPrice, UserID=$bookingUserId');
 
       // Validate receipt
@@ -73,53 +75,125 @@ class HomeRepo {
         "validated_amount": bookingPrice
       };
 
-      developer.log('Sending validation request: $validationData');
+      AppLogger.log('Sending validation request: $validationData');
 
       final validationResponse = await _apiService.post(
         '${ApiService.prodEndpointBookings}/promoters/validate-receipt',
         data: validationData,
       );
       final responseData = validationResponse.data;
-developer.log('Validation response: $responseData');
+      AppLogger.log('Validation response: $responseData');
 
-// ✅ Check for nested errors even on success responses
-final nestedErrors = responseData['data']?['errors'];
-if (nestedErrors != null) {
-  if (nestedErrors is List && nestedErrors.isNotEmpty) {
-    throw DioException(
-      requestOptions: validationResponse.requestOptions,
-      response: Response(
-        requestOptions: validationResponse.requestOptions,
-        statusCode: 422, // simulate validation failure
-        data: {"data": {"errors": nestedErrors}},
-      ),
-      type: DioErrorType.badResponse,
-    );
-  } else if (nestedErrors is String && nestedErrors.isNotEmpty) {
-    throw DioException(
-      requestOptions: validationResponse.requestOptions,
-      response: Response(
-        requestOptions: validationResponse.requestOptions,
-        statusCode: 422,
-        data: {"data": {"errors": [nestedErrors]}},
-      ),
-      type: DioErrorType.badResponse,
-    );
-  }
-}
+      // 1) If top-level success is explicitly false -> try to surface nested errors
+      if (responseData['success'] == false) {
+        final nestedErrors = responseData['data']?['errors'];
+        if (nestedErrors is List && nestedErrors.isNotEmpty) {
+          throw DioException(
+            requestOptions: validationResponse.requestOptions,
+            response: Response(
+              requestOptions: validationResponse.requestOptions,
+              statusCode: 422,
+              data: {
+                "data": {"errors": nestedErrors}
+              },
+            ),
+            type: DioErrorType.badResponse,
+          );
+        } else if (nestedErrors is String && nestedErrors.isNotEmpty) {
+          throw DioException(
+            requestOptions: validationResponse.requestOptions,
+            response: Response(
+              requestOptions: validationResponse.requestOptions,
+              statusCode: 422,
+              data: {
+                "data": {
+                  "errors": [nestedErrors]
+                }
+              },
+            ),
+            type: DioErrorType.badResponse,
+          );
+        }
+      }
 
-return responseData;
+      // 2) If top-level success is true BUT nested payload indicates failure
+      final nestedData = responseData['data'];
+      if (nestedData is Map<String, dynamic>) {
+        final nestedSuccess = nestedData['success'];
+        final nestedErrors = nestedData['errors'];
 
-      developer.log('Validation response: ${validationResponse.data}');
-      return validationResponse.data;
+        final hasNonEmptyListErrors =
+            nestedErrors is List && nestedErrors.isNotEmpty;
+        final hasNonEmptyStringError =
+            nestedErrors is String && nestedErrors.isNotEmpty;
+
+        if (nestedSuccess == false ||
+            hasNonEmptyListErrors ||
+            hasNonEmptyStringError) {
+          final normalizedErrors = hasNonEmptyListErrors
+              ? nestedErrors
+              : hasNonEmptyStringError
+                  ? [nestedErrors]
+                  : ["Validation failed"]; // fallback
+
+          throw DioException(
+            requestOptions: validationResponse.requestOptions,
+            response: Response(
+              requestOptions: validationResponse.requestOptions,
+              statusCode: 422,
+              data: {
+                "data": {"errors": normalizedErrors}
+              },
+            ),
+            type: DioErrorType.badResponse,
+          );
+        }
+      }
+
+      // 3) Legacy guard: throw only if top-level success not true AND nested errors non-empty
+      if (responseData['success'] != true) {
+        final nestedErrors = responseData['data']?['errors'];
+        if (nestedErrors != null) {
+          if (nestedErrors is List && nestedErrors.isNotEmpty) {
+            throw DioException(
+              requestOptions: validationResponse.requestOptions,
+              response: Response(
+                requestOptions: validationResponse.requestOptions,
+                statusCode: 422,
+                data: {
+                  "data": {"errors": nestedErrors}
+                },
+              ),
+              type: DioErrorType.badResponse,
+            );
+          } else if (nestedErrors is String && nestedErrors.isNotEmpty) {
+            throw DioException(
+              requestOptions: validationResponse.requestOptions,
+              response: Response(
+                requestOptions: validationResponse.requestOptions,
+                statusCode: 422,
+                data: {
+                  "data": {
+                    "errors": [nestedErrors]
+                  }
+                },
+              ),
+              type: DioErrorType.badResponse,
+            );
+          }
+        }
+      }
+
+      // If we reach here, treat as success
+      return responseData;
     } catch (e) {
-      developer.log('❌ Receipt validation error: $e');
+      AppLogger.log('❌ Receipt validation error: $e');
       rethrow;
     }
 
     //   if (validationResponse.statusCode == 200 ||
     //       validationResponse.statusCode == 201) {
-    //     developer.log('✅ Receipt validated successfully');
+    //     AppLogger.log('✅ Receipt validated successfully');
     //     return validationResponse.data;
     //   } else {
     //     // Extract backend error details
@@ -132,11 +206,11 @@ return responseData;
     //         ? errorMessage
     //         : 'Validation failed (Status: ${validationResponse.statusCode})';
 
-    //     developer.log('❌ Receipt validation error: $errorMsg');
+    //     AppLogger.log('❌ Receipt validation error: $errorMsg');
     //     throw Exception(errorMsg);
     //   }
     // } catch (e) {
-    //   developer.log('❌ Receipt validation error: $e');
+    //   AppLogger.log('❌ Receipt validation error: $e');
     //   rethrow; // Pass the error up to the caller
     // }
   }

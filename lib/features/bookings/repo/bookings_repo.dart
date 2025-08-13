@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flexpromoter/exports.dart';
 import 'package:flexpromoter/features/auth/models/user_model.dart';
 import 'package:flexpromoter/features/bookings/models/booking_response_model.dart';
@@ -7,6 +6,7 @@ import 'package:flexpromoter/features/bookings/models/make_bookings_model.dart';
 import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
 import 'package:flexpromoter/utils/services/api_service.dart';
 import 'package:flexpromoter/utils/services/error_handler.dart';
+import 'package:flexpromoter/utils/services/logger.dart';
 import 'package:flexpromoter/utils/widgets/scaffold_messengers.dart'
     as custom_snackbar;
 
@@ -157,12 +157,11 @@ class BookingsRepository {
 
       // Log the request payload
       final payload = updatedBookingRequest.toJson();
-      developer.log('Creating booking with payload: $payload',
-          name: 'BookingsRepository');
+      AppLogger.log('Creating booking with payload: $payload',);
 
       // Log the complete request URL
       final url = '${ApiService.prodEndpointBookings}/booking/promoter-create';
-      developer.log('Request URL: $url', name: 'BookingsRepository');
+      AppLogger.log('Request URL: $url',);
 
       try {
         // Make the request with detailed logging
@@ -172,10 +171,10 @@ class BookingsRepository {
         );
 
         // Log the complete response
-        developer.log('Response Status Code: ${response.statusCode}',
-            name: 'BookingsRepository');
-        developer.log('Response Data: ${response.data}',
-            name: 'BookingsRepository');
+        AppLogger.log('Response Status Code: ${response.statusCode}',
+            );
+        AppLogger.log('Response Data: ${response.data}',
+           );
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           final bookingResponse = BookingResponseModel.fromJson(response.data);
@@ -204,8 +203,8 @@ class BookingsRepository {
           return true;
         }
       } on DioException catch (e) {
-        developer.log('DioException in createBooking: ${e.message}',
-            name: 'BookingsRepository', error: e);
+        AppLogger.log('DioException in createBooking: ${e.message}',
+            );
 
         // Handle timeout errors
         if (e.type == DioExceptionType.receiveTimeout ||
@@ -235,8 +234,8 @@ class BookingsRepository {
           //       return true;
           //     }
           //   } catch (verifyError) {
-          //     developer.log('Error verifying booking: $verifyError',
-          //         name: 'BookingsRepository');
+          //     AppLogger.log('Error verifying booking: $verifyError',
+          //         ');
           //   }
         }
 
@@ -260,8 +259,7 @@ class BookingsRepository {
 
       throw Exception('Failed to create booking');
     } catch (e) {
-      developer.log('Error in createBooking: $e',
-          name: 'BookingsRepository', error: e);
+      AppLogger.log('Error in createBooking: $e', );
       if (context.mounted) {
         custom_snackbar.CustomSnackBar.showError(
           context,
@@ -299,9 +297,8 @@ class BookingsRepository {
       PromptBookingPaymentRequest request) async {
     try {
       // Log the request payload
-      developer.log(
+      AppLogger.log(
         'PromptBookingPayment REQUEST: ${request.toJson()}',
-        name: 'BookingsRepository',
       );
 
       final response = await _apiService.post(
@@ -310,24 +307,19 @@ class BookingsRepository {
       );
 
       // Log the full response data
-      developer.log(
+      AppLogger.log(
         'PromptBookingPayment RESPONSE: ${response.data}',
-        name: 'BookingsRepository',
       );
 
       return PromptBookingPaymentResponse.fromJson(response.data);
     } on DioException catch (e) {
-      developer.log(
+      AppLogger.log(
         'PromptBookingPayment ERROR: ${e.response?.data ?? e.toString()}',
-        name: 'BookingsRepository',
-        error: e,
       );
       throw Exception(ErrorHandler.handleError(e));
     } catch (e) {
-      developer.log(
+      AppLogger.log(
         'PromptBookingPayment UNEXPECTED ERROR: $e',
-        name: 'BookingsRepository',
-        error: e,
       );
       throw Exception('An unexpected error occurred: $e');
     }
@@ -339,16 +331,15 @@ class BookingsRepository {
   void handleError(BuildContext context, dynamic error) {
     if (error is DioException) {
       final errorMessage = ErrorHandler.handleError(error);
-      developer.log('API Error: $errorMessage',
-          name: 'BookingsRepository', error: error);
+      AppLogger.log('API Error: $errorMessage',);
       custom_snackbar.CustomSnackBar.showError(
         context,
         title: 'Error',
         message: errorMessage,
       );
     } else {
-      developer.log('General Error: ${error.toString()}',
-          name: 'BookingsRepository', error: error);
+      AppLogger.log('General Error: ${error.toString()}',
+      );
       custom_snackbar.CustomSnackBar.showError(
         context,
         title: 'Error',

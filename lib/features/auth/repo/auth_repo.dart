@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flexpromoter/features/auth/models/user_model.dart';
 import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
 import 'package:flexpromoter/utils/services/error_handler.dart';
+import 'package:flexpromoter/utils/services/logger.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flexpromoter/utils/services/api_service.dart';
 
@@ -39,14 +40,14 @@ class AuthRepo {
         ),
       );
 
-      print("OTP request succeeded: ${response.data}");
+      AppLogger.log("OTP request succeeded: ${response.data}");
       return response;
     } on DioException catch (e) {
-      // print("OTP request failed: ${e.message}");
+      // AppLogger.log("OTP request failed: ${e.message}");
       final errorMessage = ErrorHandler.handleError(e);
       throw Exception(errorMessage);
     } catch (e) {
-      print("Unexpected error during OTP request: $e");
+      AppLogger.log("Unexpected error during OTP request: $e");
       rethrow;
     }
   }
@@ -89,14 +90,14 @@ class AuthRepo {
       await SharedPreferencesHelper.saveUserData(response.data);
       await SharedPreferencesHelper.saveToken(responseData["token"] ?? "");
 
-      print("OTP verification succeeded: ${response.data}");
+      AppLogger.log("OTP verification succeeded: ${response.data}");
       return response;
     } on DioException catch (e) {
-      // print("OTP verification failed: ${e.message}");
+      // AppLogger.log("OTP verification failed: ${e.message}");
       final errorMessage = ErrorHandler.handleError(e);
       throw Exception(errorMessage);
     } catch (e) {
-      print("Unexpected error during OTP verification: $e");
+      AppLogger.log("Unexpected error during OTP verification: $e");
       rethrow;
     }
   }

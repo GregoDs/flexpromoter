@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flexpromoter/exports.dart';
 import 'package:flutter/services.dart';
-
+import 'package:in_app_update/in_app_update.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -26,19 +26,71 @@ class _SplashScreenState extends State<SplashScreen>
     animation = CurvedAnimation(parent: controller, curve: Curves.linear);
 
     _checkLoginStatus();
+    _checkForUpdate();
+  }
 
-    // Timer(const Duration(seconds: 7),() => Get.offNamed(RouteHelper.getAuth()));
+  /// Check for Google Play in-app updates
+ Future<void> _checkForUpdate() async {
+  try {
+    AppUpdateInfo updateInfo = await InAppUpdate.checkForUpdate();
+
+    if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
+      // Show a custom prompt before forcing the update
+      _showUpdateDialog();
+    } else {
+      // Skip the 7-second delay if no update is needed
+      _navigateImmediately();
+    }
+  } catch (e) {
+    print("Update check failed: $e");
+    _navigateImmediately();
+  }
+}
+
+void _navigateImmediately() {
+  // Small delay (e.g., 500ms) so the splash animation shows briefly
+  Timer(
+    const Duration(milliseconds: 5000),
+    () => firstLaunch
+        ? Navigator.pushReplacementNamed(context, Routes.onboarding)
+        : isLoggedIn
+            ? Navigator.pushReplacementNamed(context, Routes.home)
+            : Navigator.pushReplacementNamed(context, Routes.login),
+  );
+}
+
+void _showUpdateDialog() {
+  showDialog(
+    context: context,
+    barrierDismissible: false, // can't dismiss without action
+    builder: (context) => AlertDialog(
+      title: const Text("Update Available"),
+      content: const Text(
+        "A new version of the app is available. Please update to continue.",
+      ),
+      actions: [
+        TextButton(
+          onPressed: () async {
+            Navigator.of(context).pop();
+            await InAppUpdate.performImmediateUpdate();
+            // After update, Play Store restarts app automatically
+          },
+          child: const Text("Update Now"),
+        ),
+      ],
+    ),
+  );
+}
+
+  void _startNavigationTimer() {
     Timer(
-        const Duration(seconds: 7),
-        () => firstLaunch
-             ? Navigator.pushReplacementNamed(context, Routes.onboarding)
-             : isLoggedIn
-                 ? Navigator.pushReplacementNamed(context, Routes.home)
-                 : Navigator.pushReplacementNamed(context, Routes.login)
-        // isLoggedIn
-        //     ? Get.to(() => const MyBusiness())
-        //     : Get.to(() => const SignIn()),
-        );
+      const Duration(seconds: 7),
+      () => firstLaunch
+          ? Navigator.pushReplacementNamed(context, Routes.onboarding)
+          : isLoggedIn
+              ? Navigator.pushReplacementNamed(context, Routes.home)
+              : Navigator.pushReplacementNamed(context, Routes.login),
+    );
   }
 
   _checkLoginStatus() async {
@@ -53,16 +105,10 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
-//   @override
-// dispose() {
-//   controller.dispose(); // you need this
-//   super.dispose();
-// }
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        //statusBarColor: ColorName.primaryColor,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.dark,
       ),
@@ -86,25 +132,17 @@ class _SplashScreenState extends State<SplashScreen>
                       decoration: BoxDecoration(
                         image: DecorationImage(
                           image: AssetImage(Assets.images.flexpay.path),
-                          // fit: BoxFit.cover,
                         ),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 180.h,
-                ),
+                SizedBox(height: 180.h),
                 const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // AppText.medium("Lipia polepole", color: ColorName.mainGrey,),
-                    // AppText.medium("Furahia matokeo",color: ColorName.mainGrey,)
-                  ],
+                  children: [],
                 ),
-                SizedBox(
-                  height: 100.h,
-                ),
+                SizedBox(height: 100.h),
               ],
             ),
           ),

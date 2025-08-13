@@ -9,14 +9,13 @@ class ErrorHandler {
     // ✅ Parse error from response data
     if (data is Map<String, dynamic>) {
       // ✅ Check nested: data.data.errors
-      final nestedErrors = data['data'] is Map<String, dynamic>
-          ? data['data']['errors']
-          : null;
+      final nestedErrors =
+          data['data'] is Map<String, dynamic> ? data['data']['errors'] : null;
 
       if (nestedErrors != null) {
         if (nestedErrors is List && nestedErrors.isNotEmpty) {
           return nestedErrors.join(', ');
-        } else if (nestedErrors is String) {
+        } else if (nestedErrors is String && nestedErrors.isNotEmpty) {
           return nestedErrors;
         }
       }
@@ -26,21 +25,21 @@ class ErrorHandler {
       if (topLevelErrors != null) {
         if (topLevelErrors is List && topLevelErrors.isNotEmpty) {
           return topLevelErrors.join(', ');
-        } else if (topLevelErrors is String) {
+        } else if (topLevelErrors is String && topLevelErrors.isNotEmpty) {
           return topLevelErrors;
         }
       }
 
       // ✅ Check top-level: data.message
-      if (data['message'] is String) {
+      if (data['message'] is String && (data['message'] as String).isNotEmpty) {
         return data['message'];
       }
 
       // ✅ Check top-level: data.data as error string/list
       final rawData = data['data'];
       if (rawData is List && rawData.isNotEmpty) {
-        return rawData.join(', ');
-      } else if (rawData is String) {
+        return rawData.map((e) => e.toString()).join(', ');
+      } else if (rawData is String && rawData.isNotEmpty) {
         return rawData;
       }
     }
@@ -69,18 +68,18 @@ class ErrorHandler {
 
     // ✅ Handle Dio-specific errors
     switch (error.type) {
-      case DioErrorType.connectionTimeout:
+      case DioExceptionType.connectionTimeout:
         return "Connection timeout. Please check your internet connection.";
-      case DioErrorType.sendTimeout:
+      case DioExceptionType.sendTimeout:
         return "Send timeout. Please check your internet connection.";
-      case DioErrorType.receiveTimeout:
+      case DioExceptionType.receiveTimeout:
         return "Receive timeout. Please check your internet connection.";
-      case DioErrorType.cancel:
+      case DioExceptionType.cancel:
         return "Request was cancelled. Please try again.";
-      case DioErrorType.badCertificate:
+      case DioExceptionType.badCertificate:
         return "Bad certificate. Please check your network security.";
-      case DioErrorType.connectionError:
-      case DioErrorType.unknown:
+      case DioExceptionType.connectionError:
+      case DioExceptionType.unknown:
         return "Something went wrong. Please check your internet connection.";
       default:
         return "An unexpected error occurred. Please try again.";
