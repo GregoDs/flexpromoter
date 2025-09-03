@@ -1,5 +1,1 @@
-package com.flexpay.flexpromoter
-
-import io.flutter.embedding.android.FlutterActivity
-
-class MainActivity : FlutterActivity()
+// This file has been deleted to resolve the redeclaration error.

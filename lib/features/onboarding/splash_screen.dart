@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flexpromoter/exports.dart';
 import 'package:flutter/services.dart';
-import 'package:in_app_update/in_app_update.dart';
+import 'package:upgrader/upgrader.dart';
+import 'package:flexpromoter/utils/services/logger.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,71 +18,93 @@ class _SplashScreenState extends State<SplashScreen>
   bool firstLaunch = false;
   late Animation<double> animation;
   late AnimationController controller;
+  late Upgrader upgrader;
 
   @override
   void initState() {
     super.initState();
-    controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 4))
-          ..forward();
-    animation = CurvedAnimation(parent: controller, curve: Curves.linear);
 
+    upgrader = Upgrader(); 
+
+    // Start splash immediately
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..forward();
+
+    animation = CurvedAnimation(
+      parent: controller,
+      curve: Curves.linear,
+    );
+
+    // Run login check
     _checkLoginStatus();
-    _checkForUpdate();
+
+    // Delay upgrade check slightly so splash can render first
+    Future.delayed(const Duration(seconds: 4), () {
+      _checkForVersionUpdate();
+    });
   }
 
-  /// Check for Google Play in-app updates
- Future<void> _checkForUpdate() async {
-  try {
-    AppUpdateInfo updateInfo = await InAppUpdate.checkForUpdate();
+  //Check for Google Play in-app updates
+  _checkForVersionUpdate() {
+    // FOR TESTING ONLY: Hardcode version codes
+    //checkForUpdate("FAKE_VERSION");
+    // const playStoreVersionCode = 9; // Simulate a higher version available
+    // const installedVersionCode = 8; // Simulate current installed version
 
-    if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
-      // Show a custom prompt before forcing the update
-      _showUpdateDialog();
+    //For Production use
+    final playStoreVersion = upgrader.versionInfo?.appStoreVersion;
+    final installedVersion = upgrader.versionInfo?.installedVersion;
+
+    AppLogger.log('Available update version: ${playStoreVersion?.toString()}');
+    AppLogger.log('Installed app version: ${installedVersion?.toString()}');
+
+    // if (playStoreVersionCode > installedVersionCode) {
+    //   checkForUpdate('1.0.0+11');
+    // } else {
+    //   AppLogger.log("App is up to date");
+    //   // Immediately navigate to the correct screen
+    //   if (firstLaunch) {
+    //     Navigator.pushReplacementNamed(context, Routes.onboarding);
+    //   } else if (isLoggedIn) {
+    //     Navigator.pushReplacementNamed(context, Routes.home);
+    //   } else {
+    //     Navigator.pushReplacementNamed(context, Routes.login);
+    //   }
+    // }
+
+    if (playStoreVersion != null && installedVersion != null) {
+      if (playStoreVersion > installedVersion) {
+        checkForUpdate(playStoreVersion.toString());
+      } else {
+        AppLogger.log('App is up to date');
+        _navigateImmediately();
+      }
     } else {
-      // Skip the 7-second delay if no update is needed
+      AppLogger.log('Version info is not available');
       _navigateImmediately();
     }
-  } catch (e) {
-    print("Update check failed: $e");
-    _navigateImmediately();
   }
-}
 
-void _navigateImmediately() {
-  // Small delay (e.g., 500ms) so the splash animation shows briefly
-  Timer(
-    const Duration(milliseconds: 5000),
-    () => firstLaunch
-        ? Navigator.pushReplacementNamed(context, Routes.onboarding)
-        : isLoggedIn
-            ? Navigator.pushReplacementNamed(context, Routes.home)
-            : Navigator.pushReplacementNamed(context, Routes.login),
-  );
-}
+  void checkForUpdate(String playStoreVersion) {
+    String updateUrl = Platform.isAndroid
+        ? 'https://play.google.com/store/apps/details?id=com.flexpay.flexpromoter'
+        : 'https://apps.apple.com/app/app_store_id';
 
-void _showUpdateDialog() {
-  showDialog(
-    context: context,
-    barrierDismissible: false, // can't dismiss without action
-    builder: (context) => AlertDialog(
-      title: const Text("Update Available"),
-      content: const Text(
-        "A new version of the app is available. Please update to continue.",
-      ),
-      actions: [
-        TextButton(
-          onPressed: () async {
-            Navigator.of(context).pop();
-            await InAppUpdate.performImmediateUpdate();
-            // After update, Play Store restarts app automatically
-          },
-          child: const Text("Update Now"),
-        ),
-      ],
-    ),
-  );
-}
+    _showUpdateDialog(updateUrl, playStoreVersion);
+  }
+
+  void _navigateImmediately() {
+    Timer(
+      const Duration(milliseconds: 0000),
+      () => firstLaunch
+          ? Navigator.pushReplacementNamed(context, Routes.onboarding)
+          : isLoggedIn
+              ? Navigator.pushReplacementNamed(context, Routes.home)
+              : Navigator.pushReplacementNamed(context, Routes.login),
+    );
+  }
 
   void _startNavigationTimer() {
     Timer(
@@ -101,8 +125,133 @@ void _showUpdateDialog() {
     setState(() {
       firstLaunch = launch ?? true;
       isLoggedIn = token != null && token.isNotEmpty;
-      print("Token: $token");
+      AppLogger.log("Token: $token");
     });
+  }
+
+  void _showUpdateDialog(String updateUrl, String storeVersion) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: const EdgeInsets.fromLTRB(22, 24, 24, 16),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/icon/Flexpay Logo-01.png',
+                    width: 36,
+                    height: 36,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Update FlexPromoter?',
+                    style: TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Download size: 9.2 MB',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                  fontWeight: FontWeight.w400,
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'FlexPromoter recommends that you update to the latest version. Kindly update for the necessary changes to be applied.',
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                  fontWeight: FontWeight.w400,
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF388E3C), // Green
+                      textStyle: const TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      // Immediately navigate to the correct screen
+                      if (firstLaunch) {
+                        Navigator.pushReplacementNamed(
+                            context, Routes.onboarding);
+                      } else if (isLoggedIn) {
+                        Navigator.pushReplacementNamed(context, Routes.home);
+                      } else {
+                        Navigator.pushReplacementNamed(context, Routes.login);
+                      }
+                    },
+                    child: const Text('NO THANKS'),
+                  ),
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    height: 36,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF388E3C), // Green
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        textStyle: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                        minimumSize: const Size(88, 36),
+                        elevation: 0,
+                      ),
+                      onPressed: () async {
+                        Navigator.of(context).pop();
+                        if (await canLaunchUrl(Uri.parse(updateUrl))) {
+                          await launchUrl(Uri.parse(updateUrl),
+                              mode: LaunchMode.externalApplication);
+                        }
+                        _startNavigationTimer();
+                      },
+                      child: const Text('UPDATE'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Center(
+                child: Image.asset(
+                  'assets/icon/Flexpay Logo-01.png',
+                  width: 72,
+                  height: 72,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -151,44 +300,3 @@ void _showUpdateDialog() {
     );
   }
 }
-
-// class StartupRedirector extends StatefulWidget {
-//   const StartupRedirector({super.key});
-
-//   @override
-//   State<StartupRedirector> createState() => _StartupRedirectorState();
-// }
-
-// class _StartupRedirectorState extends State<StartupRedirector> {
-//   @override
-//   void initState() {
-//     super.initState();
-//     _navigateAfterDelay();
-//   }
-
-//   Future<void> _navigateAfterDelay() async {
-//     SharedPreferences localStorage = await SharedPreferences.getInstance();
-//     final launch = localStorage.getBool('firstLaunch') ?? true;
-//     final token = localStorage.getString('token');
-
-//     // Slight delay to ensure build has settled (optional but helps)
-//     await Future.delayed(const Duration(milliseconds: 100));
-
-//     if (launch) {
-//       Navigator.pushReplacementNamed(context, Routes.onboarding);
-//     } else if (token != null && token.isNotEmpty) {
-//       Navigator.pushReplacementNamed(context, Routes.home);
-//     } else {
-//       Navigator.pushReplacementNamed(context, Routes.login);
-//     }
-
-//     // Remove splash AFTER push to avoid flicker
-//     FlutterNativeSplash.remove();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     // Do not return any visual layout to avoid white screen
-//     return const SizedBox.shrink(); // fully transparent
-//   }
-// }

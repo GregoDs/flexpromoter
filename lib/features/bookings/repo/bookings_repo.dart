@@ -21,6 +21,7 @@ class BookingsRepository {
     }
     final userModel = UserModel.fromJson(userData);
     final userId = userModel.user.id.toString();
+    // const userId = '141192';
     final response = await _apiService.get(
       '${ApiService.prodEndpointBookings}/promoter/bookings/open/$userId?page=$page',
     );
@@ -35,8 +36,9 @@ class BookingsRepository {
     }
     final userModel = UserModel.fromJson(userData);
     final userId = userModel.user.id.toString();
+    // const userId = '141192';
     final response = await _apiService.get(
-      '${ApiService.prodEndpointBookings}/promoter/bookings/closed/$userId?page=$page',
+      '${ApiService.prodEndpointBookings}/promoter/bookings/closed/$userId ?page=$page',
     );
     return _parsePaginatedBookingsResponse(response.data);
   }
@@ -49,6 +51,7 @@ class BookingsRepository {
     }
     final userModel = UserModel.fromJson(userData);
     final userId = userModel.user.id.toString();
+    // const userId = '141192';
     final response = await _apiService.get(
       '${ApiService.prodEndpointBookings}/promoter/bookings/redeemed/$userId?page=$page',
     );
@@ -63,6 +66,7 @@ class BookingsRepository {
     }
     final userModel = UserModel.fromJson(userData);
     final userId = userModel.user.id.toString();
+    // const userId = '141192';
     final response = await _apiService.get(
       '${ApiService.prodEndpointBookings}/promoter/bookings/unserviced/$userId?page=$page',
     );
@@ -157,11 +161,15 @@ class BookingsRepository {
 
       // Log the request payload
       final payload = updatedBookingRequest.toJson();
-      AppLogger.log('Creating booking with payload: $payload',);
+      AppLogger.log(
+        'Creating booking with payload: $payload',
+      );
 
       // Log the complete request URL
       final url = '${ApiService.prodEndpointBookings}/booking/promoter-create';
-      AppLogger.log('Request URL: $url',);
+      AppLogger.log(
+        'Request URL: $url',
+      );
 
       try {
         // Make the request with detailed logging
@@ -171,10 +179,12 @@ class BookingsRepository {
         );
 
         // Log the complete response
-        AppLogger.log('Response Status Code: ${response.statusCode}',
-            );
-        AppLogger.log('Response Data: ${response.data}',
-           );
+        AppLogger.log(
+          'Response Status Code: ${response.statusCode}',
+        );
+        AppLogger.log(
+          'Response Data: ${response.data}',
+        );
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           final bookingResponse = BookingResponseModel.fromJson(response.data);
@@ -203,8 +213,9 @@ class BookingsRepository {
           return true;
         }
       } on DioException catch (e) {
-        AppLogger.log('DioException in createBooking: ${e.message}',
-            );
+        AppLogger.log(
+          'DioException in createBooking: ${e.message}',
+        );
 
         // Handle timeout errors
         if (e.type == DioExceptionType.receiveTimeout ||
@@ -259,7 +270,9 @@ class BookingsRepository {
 
       throw Exception('Failed to create booking');
     } catch (e) {
-      AppLogger.log('Error in createBooking: $e', );
+      AppLogger.log(
+        'Error in createBooking: $e',
+      );
       if (context.mounted) {
         custom_snackbar.CustomSnackBar.showError(
           context,
@@ -331,14 +344,17 @@ class BookingsRepository {
   void handleError(BuildContext context, dynamic error) {
     if (error is DioException) {
       final errorMessage = ErrorHandler.handleError(error);
-      AppLogger.log('API Error: $errorMessage',);
+      AppLogger.log(
+        'API Error: $errorMessage',
+      );
       custom_snackbar.CustomSnackBar.showError(
         context,
         title: 'Error',
         message: errorMessage,
       );
     } else {
-      AppLogger.log('General Error: ${error.toString()}',
+      AppLogger.log(
+        'General Error: ${error.toString()}',
       );
       custom_snackbar.CustomSnackBar.showError(
         context,

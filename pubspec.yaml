@@ -3,7 +3,7 @@ description: "A flexpay product."
 
 publish_to: 'none' 
 
-version: 1.0.0+10
+version: 1.0.0+12
 
 environment:
   sdk: '>=3.2.6 <4.0.0'
@@ -40,7 +40,7 @@ dependencies:
   confetti: ^0.7.0
   shimmer: ^2.0.0
   fluttertoast: ^8.2.12
-  in_app_update: ^4.2.3
+  upgrader: ^11.5.0
 
 dev_dependencies:
   flutter_test:

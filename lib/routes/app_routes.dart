@@ -2,7 +2,6 @@ import 'package:flexpromoter/exports.dart';
 import 'package:flexpromoter/features/auth/ui/otpverification.dart';
 import 'package:flexpromoter/features/bookings/cubit/bkpayment_cubit.dart';
 import 'package:flexpromoter/features/bookings/cubit/make_booking_cubit.dart';
-import 'package:flexpromoter/features/bookings/ui/booking_details.dart';
 import 'package:flexpromoter/features/bookings/ui/bookings.dart';
 import 'package:flexpromoter/features/bookings/ui/make_bookings.dart';
 import 'package:flexpromoter/features/commissions/cubit/commissions_cubit.dart';
