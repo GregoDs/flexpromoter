@@ -16,7 +16,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController phoneController = TextEditingController();
   bool _isLoading = false;
-  bool _isSnackBarShowing = false; // Flag to track if a SnackBar is showing
 
   @override
   Widget build(BuildContext context) {
@@ -30,36 +29,25 @@ class _LoginScreenState extends State<LoginScreen> {
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
             if (state is AuthLoading) {
-              // Update loading state
               setState(() {
                 _isLoading = true;
               });
             } else if (state is AuthOtpSent) {
-              // Update loading state
               setState(() {
                 _isLoading = false;
               });
-
-              // Show success message
               CustomSnackBar.showSuccess(
                 context,
                 title: 'Success',
                 message: state.message,
               );
-
-              // Delay navigation until the success SnackBar is shown
               Future.delayed(const Duration(seconds: 1), () {
-                Navigator.pushNamed(
-                    context, '/otp'); // Use the named route here
+                Navigator.pushNamed(context, '/otp');
               });
-            } else if (state is AuthError && !_isSnackBarShowing) {
-              // Update loading state
+            } else if (state is AuthError) {
               setState(() {
                 _isLoading = false;
-                _isSnackBarShowing = true;
               });
-
-              // Show error message
               CustomSnackBar.showError(
                 context,
                 title: 'Error',
@@ -67,9 +55,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 actionLabel: 'Dismiss',
                 onAction: () {
                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  setState(() {
-                    _isSnackBarShowing = false;
-                  });
                 },
               );
             }
@@ -87,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: Image.asset(
-                      'assets/images/onboardingSlide1.png',                          
+                      'assets/images/onboardingSlide1.png',
                       fit: BoxFit.cover,
                     ),
                   ),
