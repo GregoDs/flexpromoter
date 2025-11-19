@@ -1,5 +1,4 @@
-import 'package:flexpromoter/features/auth/repo/auth_repo.dart'
-    as SharedPreferencesHelper;
+import 'package:flexpromoter/features/auth/repo/auth_repo.dart' as SharedPreferencesHelper;
 import 'package:flexpromoter/features/home/repo/home_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -57,6 +56,24 @@ class _SideMenuState extends State<SideMenu> {
             title: 'Rankings',
           ),
           route: Routes.leaderboard,
+        ),
+      ],
+    ),
+     SideItem(
+      title: 'Wallet',
+      iconData: Icons.calendar_today,
+      items: [
+        SubCategoryMasterClass(
+          widget: const SubCategory(
+            title: 'Register',
+          ),
+          route: Routes.walletRegistration,
+        ),
+        SubCategoryMasterClass(
+          widget: const SubCategory(
+            title: 'Cohort',
+          ),
+          route: Routes.makeBookings,
         ),
       ],
     ),

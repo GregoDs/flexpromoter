@@ -1,4 +1,3 @@
-
 import '../../../exports.dart';
 
 // Define FontFamily if not already defined in exports.dart
@@ -17,7 +16,7 @@ class AppText extends Text {
 
   AppText.small(super.data,
       {super.key,
-      this.color = ColorName.blackColor,
+      this.color = Colors.black,
       this.fontWeight = FontWeight.normal,
       super.textAlign = TextAlign.justify,
       int? maxLine,
@@ -40,7 +39,7 @@ class AppText extends Text {
   AppText.medium(
     super.data, {
     super.key,
-    this.color = ColorName.blackColor,
+    this.color = Colors.black,
     this.fontWeight = FontWeight.w600,
     super.textAlign = TextAlign.justify,
     int? maxLine,
@@ -64,7 +63,7 @@ class AppText extends Text {
   AppText.large(
     super.data, {
     super.key,
-    this.color = ColorName.blackColor,
+    this.color = Colors.black,
     this.fontWeight = FontWeight.bold,
     super.textAlign = TextAlign.justify,
     int? maxLine,
@@ -94,7 +93,7 @@ class AppTextSpan extends TextSpan {
   final double fontSize;
 
   AppTextSpan.large(String data, {
-    this.color = ColorName.blackColor,
+    this.color = Colors.black,
     this.fontWeight = FontWeight.bold,
     this.textAlign,
     this.height,
@@ -114,7 +113,7 @@ class AppTextSpan extends TextSpan {
   );
 
   AppTextSpan.medium(String data, {
-    this.color = ColorName.blackColor,
+    this.color = Colors.black,
     this.fontWeight = FontWeight.w600,
     this.textAlign,
     this.height,
@@ -135,7 +134,7 @@ class AppTextSpan extends TextSpan {
   );
 
   AppTextSpan.small(String data, {
-    this.color = ColorName.blackColor,
+    this.color = Colors.black,
     this.fontWeight = FontWeight.w600,
     this.textAlign,
     this.height,

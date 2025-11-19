@@ -1,3 +1,4 @@
+import 'package:flexpromoter/gen/colors.gen.dart';
 import 'package:flexpromoter/routes/app_routes.dart';
 import 'package:flexpromoter/utils/widgets/app_text.dart';
 import 'package:lottie/lottie.dart';

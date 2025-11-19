@@ -6,6 +6,11 @@ import 'package:flexpromoter/utils/services/logger.dart';
 class ApiService {
   static String prodEndpointAuth = dotenv.env["PROD_ENDPOINT_AUTH"]!;
   static String prodEndpointBookings = dotenv.env['PROD_ENDPOINT_BOOKINGS']!;
+  static String prodEndpointWallet = dotenv.env['PROD_ENDPOINT_WALLET']!;
+  static String prodEndpointCreateWallet = dotenv.env['PROD_ENDPOINT_CREATE_WALLET']!;
+  
+
+
 
   final Dio _dio = Dio(
     BaseOptions(

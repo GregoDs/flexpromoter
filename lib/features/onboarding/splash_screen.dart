@@ -280,7 +280,7 @@ class _SplashScreenState extends State<SplashScreen>
                       height: 250,
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: AssetImage(Assets.images.flexpay.path),
+                          image: AssetImage(Assets.icon.flexpayLogo01.path),
                         ),
                       ),
                     ),

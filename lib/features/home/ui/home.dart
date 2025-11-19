@@ -1,4 +1,5 @@
 import 'package:flexpromoter/features/home/cubit/validate_receipt_state.dart';
+import 'package:flexpromoter/gen/colors.gen.dart';
 import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
 import 'package:flexpromoter/utils/widgets/app_text.dart';
 import '../../../exports.dart';
@@ -374,7 +375,7 @@ Padding(
                                         "Commissions",
                                         "",
                                         ColorName.primaryColor,
-                                        Icons.attach_money_rounded,
+                                        Icons.payments_rounded,
                                         0,
                                       ),
                                       SizedBox(width: 12.w),
@@ -431,7 +432,7 @@ Padding(
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             AppText.small(
-                                              "Make your\nBookings",
+                                              "Register\nCustomer",
                                               fontSize: 26.sp,
                                               color: isDarkMode
                                                   ? ColorName.whiteColor

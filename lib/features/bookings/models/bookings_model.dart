@@ -352,16 +352,37 @@ class PromptBookingPaymentRequest {
 class PromptBookingPaymentResponse {
   final String message;
   final bool success;
+  final Map<String, dynamic>? rawData;
 
   PromptBookingPaymentResponse({
     required this.message,
     required this.success,
+    this.rawData,
   });
 
   factory PromptBookingPaymentResponse.fromJson(Map<String, dynamic> json) {
+    final success = json['success'] ?? false;
+
+    String message = '';
+    if (json['message'] is String) {
+      message = json['message'];
+    } else if (json['data'] is Map<String, dynamic>) {
+      final data = json['data'] as Map<String, dynamic>;
+      if (data['description'] != null) {
+        message = data['description']; // ✅ success case
+      } else if (data['ResponseDescription'] != null) {
+        message = data['ResponseDescription']; // ✅ error case
+      }
+    }
+
     return PromptBookingPaymentResponse(
-      message: json['message'] ?? '',
-      success: json['success'] ?? false,
+      message: message,
+      success: success,
+      rawData: json['data'] is Map<String, dynamic>
+          ? Map<String, dynamic>.from(json['data'])
+          : null,
     );
   }
 }
+
+

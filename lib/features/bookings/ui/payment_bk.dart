@@ -76,25 +76,18 @@ class _PaymentPromptDialogState extends State<PaymentPromptDialog>
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         child: BlocConsumer<BKPaymentCubit, BKPaymentState>(
           listener: (context, state) {
-            if (state is BKPaymentSuccess) {
-              _showSuccessAnimation();
-              Future.delayed(const Duration(milliseconds: 800), () {
-                if (context.mounted) {
-                  Navigator.of(context).pop({
-                    'type': 'success',
-                    'message': 'Payment prompt sent successfully',
-                  });
-                }
-              });
-            } else if (state is BKPaymentError) {
-              // Show error message in the dialog, do NOT pop the dialog
-              CustomSnackBar.showError(
-                context,
-                title: "Payment Error",
-                message: state.error,
-              );
-            }
-          },
+              if (state is BKPaymentSuccess) {
+                Navigator.of(context).pop({
+                  'type': 'success',
+                  'message': state.message, // ✅ use backend message
+                });
+              } else if (state is BKPaymentError) {
+                Navigator.of(context).pop({
+                  'type': 'error',
+                  'message': state.error, // ✅ error message
+                });
+              }
+            },
           builder: (context, state) {
             return Column(
               mainAxisSize: MainAxisSize.min,

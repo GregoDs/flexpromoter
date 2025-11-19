@@ -9,6 +9,9 @@ import 'package:flexpromoter/features/commissions/ui/commissions.dart';
 import 'package:flexpromoter/features/leaderboard/ui/leaderboard_screen.dart';
 import 'package:flexpromoter/features/leaderboard/cubit/leaderboard_cubit.dart';
 import 'package:flexpromoter/features/leaderboard/repo/leaderboard_repository.dart';
+import 'package:flexpromoter/features/wallet/ui/otp_wallet.dart';
+import 'package:flexpromoter/features/wallet/ui/register_wallet.dart';
+import 'package:flexpromoter/features/wallet/cubit/wallet_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flexpromoter/features/auth/cubit/auth_cubit.dart';
 import 'package:flexpromoter/features/auth/repo/auth_repo.dart';
@@ -27,10 +30,10 @@ final bookingsCubit = BookingsCubit(
   BookingsRepository(),
   repository: BookingsRepository(),
 );
+final walletCubit = WalletCubit(); // Add global wallet cubit
 
 class AppRoutes {
   static final routes = {
-    // Routes.splash: (context) => const StartupRedirector(),
     Routes.splash: (context) => const SplashScreen(),
     Routes.onboarding: (context) => const OnBoardingScreen(),
     Routes.login: (context) => BlocProvider.value(
@@ -50,21 +53,10 @@ class AppRoutes {
           child: const MakeBookingsScreen(),
         ),
 
-    // Routes.validatedReceipts: (context) => ValidatedReceiptsPage(
-    //       validatedReceipts: _validatedReceipts,
-    //     ),
     Routes.bookings: (context) => BlocProvider.value(
           value: bookingsCubit,
           child: const BookingsScreen(),
         ),
-
-    // Routes.bookingDetails: (context) => BlocProvider.value(
-    //       value: bookingsCubit,
-    //       child: const BookingDetailScreen(
-    //         bookings: [],
-    //         title: '',
-    //       ),
-    //     ),
 
     Routes.commissions: (context) => BlocProvider.value(
           value: commissionsCubit,
@@ -75,22 +67,26 @@ class AppRoutes {
           child: const LeaderboardScreen(),
         ),
 
-    // Routes.promptBookingPayment: (context) {
-    //   final args = ModalRoute.of(context)!.settings.arguments as String;
-    //   return BookingPaymentPage(customerPhone: args, bookingReference: args,);
-    // },
+    
+    Routes.walletRegistration: (context) => BlocProvider.value(
+          value: walletCubit,
+          child: const RegisterWalletScreen(),
+        ),
 
-//     Routes.promptBookingPayment: (context) {
-//   final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-//   return BlocProvider(
-//     create: (_) => BKPaymentCubit(bookingsRepository: BookingsRepository()),
-//     child: BookingPaymentPage(
-//       customerPhone: args['customerPhone'],
-//       bookingReference: args['bookingReference'],
-//     ),
-//   );
-// },
-//   };
+   
+    Routes.otpwalletscreen: (context) {
+      final args =
+          ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+      return BlocProvider.value(
+        value: walletCubit,
+        child: OtpWalletScreen(
+          phoneNumber: args?['phoneNumber'] ?? '',
+          customerData: args?['customerData'],
+          merchantId: args?['merchantId'],
+          merchantName: args?['merchantName'],
+        ),
+      );
+    },
   };
 }
 
@@ -107,4 +103,6 @@ class Routes {
   static const leaderboard = '/leaderboard';
   static const bookingDetails = '/booking-details';
   static const promptBookingPayment = 'prompt-bkpayment';
+  static const walletRegistration = '/wallet-register';
+  static const otpwalletscreen = '/otp-wallet';
 }

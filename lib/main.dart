@@ -1,6 +1,10 @@
 import 'package:flexpromoter/features/onboarding/splash_screen.dart';
+import 'package:flexpromoter/gen/colors.gen.dart';
 import 'package:flutter/services.dart';
 import 'exports.dart';
+
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +31,7 @@ class MyApp extends StatelessWidget {
           child: MaterialApp(
             title: 'Flexpay Promoter',
             debugShowCheckedModeBanner: false,
+            scaffoldMessengerKey: rootScaffoldMessengerKey,
             theme: ThemeData(
               brightness: Brightness.light,
               primaryColor: ColorName.primaryColor,

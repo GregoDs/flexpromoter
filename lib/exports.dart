@@ -1,4 +1,3 @@
-
 export 'package:syncfusion_flutter_charts/charts.dart';
 
 export 'package:animate_do/animate_do.dart';
@@ -18,15 +17,11 @@ export 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 // Utils
 export 'exports.dart';
-export 'gen/colors.gen.dart';
 export 'gen/assets.gen.dart';
-
 
 // Home
 
-
 // Auth
-
 
 // Routes
 export 'routes/app_routes.dart';

@@ -34,7 +34,7 @@ void showBookingDetails(BuildContext context, Booking booking) {
     formattedTime = '';
   }
 
-  //Going to phone call launcher
+  // Phone launcher
   Future<void> makePhoneCall(String phoneNumber) async {
     try {
       final Uri url = Uri(scheme: 'tel', path: phoneNumber);
@@ -42,239 +42,238 @@ void showBookingDetails(BuildContext context, Booking booking) {
         await launchUrl(url);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Could not launch dialer with number $phoneNumber',
-            ),
-          ),
+          SnackBar(content: Text('Could not launch dialer with number $phoneNumber')),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error launching dialer: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error launching dialer: $e')),
+      );
     }
   }
 
   showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final double modalHeight = MediaQuery.of(context).size.height * 0.45;
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final double maxWidth = constraints.maxWidth;
-            return Container(
-              width: double.infinity,
-              constraints: BoxConstraints(
-                minHeight: modalHeight,
-                maxHeight: MediaQuery.of(context).size.height * 0.95,
-                maxWidth: maxWidth,
-              ),
-              decoration: const BoxDecoration(
-                color: Color(0xFF184A5A),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-              ),
-              child: Stack(
-                alignment: Alignment.topCenter,
-                children: [
-                  // Card with details
-                  Container(
-                    margin: const EdgeInsets.only(top: 60),
-                    padding: EdgeInsets.fromLTRB(
-                      maxWidth * 0.05,
-                      70,
-                      maxWidth * 0.05,
-                      20,
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) {
+      // ✅ wrap the bottom sheet with its own ScaffoldMessenger
+      return ScaffoldMessenger(
+        child: Builder(
+          builder: (localContext) {
+            final double modalHeight = MediaQuery.of(localContext).size.height * 0.45;
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final double maxWidth = constraints.maxWidth;
+                return Container(
+                  width: double.infinity,
+                  constraints: BoxConstraints(
+                    minHeight: modalHeight,
+                    maxHeight: MediaQuery.of(localContext).size.height * 0.95,
+                    maxWidth: maxWidth,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF184A5A),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF184A5A),
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Product Name
-                          Text(
-                            booking.product?.productName ?? '',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          // Outlet Name
-                          Text(
-                            booking.outlet?.outletName ?? '',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 15,
-                              color: Colors.cyan[100],
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 1.1,
-                            ),
-                            overflow: TextOverflow.visible,
-                            softWrap: true,
-                          ),
-                          const SizedBox(height: 20),
-                          // Row: Product Cost & Balance
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.topCenter,
+                    children: [
+                      // Card with details
+                      Container(
+                        margin: const EdgeInsets.only(top: 60),
+                        padding: EdgeInsets.fromLTRB(
+                          maxWidth * 0.05,
+                          70,
+                          maxWidth * 0.05,
+                          20,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF184A5A),
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              _iconDetail(
-                                icon: Icons.attach_money,
-                                label: "Product Cost",
-                                value: "Kshs ${booking.bookingPrice}",
-                                context: context,
+                              Text(
+                                booking.product?.productName ?? '',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
-                              _iconDetail(
-                                icon: Icons.account_balance_wallet,
-                                label: "Balance",
-                                value: "Kshs $balance",
-                                alignEnd: true,
-                                context: context,
+                              const SizedBox(height: 4),
+                              Text(
+                                booking.outlet?.outletName ?? '',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 15,
+                                  color: Colors.cyan[100],
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 1.1,
+                                ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Divider(color: Colors.white.withOpacity(0.3)),
-                          const SizedBox(height: 8),
-                          // Row: Paid & Booking Reference
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _iconDetail(
-                                icon: Icons.payments,
-                                label: "Paid",
-                                value: "Kshs ${booking.totalPayments ?? 0}",
-                                context: context,
-                              ),
-                              _iconDetail(
-                                icon: Icons.confirmation_number,
-                                label: "Reference",
-                                value: booking.bookingReference,
-                                alignEnd: true,
-                                context: context,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Divider(color: Colors.white.withOpacity(0.3)),
-                          const SizedBox(height: 8),
-                          // Row: Customer Phone & Date
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _iconDetail(
-                                icon: Icons.location_on,
-                                label: "Branch",
-                                value: booking.outlet?.outletName ?? '',
-                                context: context,
-                              ),
-                              _iconDetail(
-                                icon: Icons.calendar_today,
-                                label: "Date",
-                                value: formattedDate,
-                                alignEnd: true,
-                                context: context,
-                              ),
-                            ],
-                          ),
+                              const SizedBox(height: 20),
 
-                          const SizedBox(height: 30),
-                          // Row: Customer phone number
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _iconDetail(
-                                icon: Icons.phone,
-                                label: "Customer Phone",
-                                value: "+${booking.customerPhoneNum}",
-                                isPhone: true,
-                                onPhoneTap: () => makePhoneCall(
-                                    "+${booking.customerPhoneNum}"),
-                                context: context,
+                              // Product cost & balance
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _iconDetail(
+                                    icon: Icons.attach_money,
+                                    label: "Product Cost",
+                                    value: "Kshs ${booking.bookingPrice}",
+                                    context: localContext,
+                                  ),
+                                  _iconDetail(
+                                    icon: Icons.account_balance_wallet,
+                                    label: "Balance",
+                                    value: "Kshs $balance",
+                                    alignEnd: true,
+                                    context: localContext,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 30),
-                          if (!isComplete)
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  final result = await showDialog(
-                                    context: context,
-                                    builder: (_) => BlocProvider.value(
-                                      value: BKPaymentCubit(
-                                          bookingsRepository:
-                                              BookingsRepository()),
-                                      child: PaymentPromptDialog(
-                                        customerPhone:
-                                            booking.customer?.phoneNumber1 ??
-                                                '',
-                                        bookingReference:
-                                            booking.bookingReference,
+                              const SizedBox(height: 12),
+                              Divider(color: Colors.white.withOpacity(0.3)),
+                              const SizedBox(height: 8),
+
+                              // Paid & reference
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _iconDetail(
+                                    icon: Icons.payments,
+                                    label: "Paid",
+                                    value: "Kshs ${booking.totalPayments ?? 0}",
+                                    context: localContext,
+                                  ),
+                                  _iconDetail(
+                                    icon: Icons.confirmation_number,
+                                    label: "Reference",
+                                    value: booking.bookingReference,
+                                    alignEnd: true,
+                                    context: localContext,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Divider(color: Colors.white.withOpacity(0.3)),
+                              const SizedBox(height: 8),
+
+                              // Branch & date
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _iconDetail(
+                                    icon: Icons.location_on,
+                                    label: "Branch",
+                                    value: booking.outlet?.outletName ?? '',
+                                    context: localContext,
+                                  ),
+                                  _iconDetail(
+                                    icon: Icons.calendar_today,
+                                    label: "Date",
+                                    value: formattedDate,
+                                    alignEnd: true,
+                                    context: localContext,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 30),
+
+                              // Customer phone
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _iconDetail(
+                                    icon: Icons.phone,
+                                    label: "Customer Phone",
+                                    value: "+${booking.customerPhoneNum}",
+                                    isPhone: true,
+                                    onPhoneTap: () => makePhoneCall("+${booking.customerPhoneNum}"),
+                                    context: localContext,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 30),
+
+                              if (!isComplete)
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      final result = await showDialog(
+                                        context: localContext,
+                                        builder: (_) => BlocProvider.value(
+                                          value: BKPaymentCubit(
+                                            bookingsRepository: BookingsRepository(),
+                                          ),
+                                          child: PaymentPromptDialog(
+                                            customerPhone: booking.customer?.phoneNumber1 ?? '',
+                                            bookingReference: booking.bookingReference,
+                                          ),
+                                        ),
+                                      );
+                                      if (result != null && result is Map) {
+                                        if (result['type'] == 'success') {
+                                          CustomSnackBar.showSuccess(
+                                            localContext,
+                                            title: "Payment Prompt Sent",
+                                            message: result['message'] ?? '',
+                                          );
+                                        } else if (result['type'] == 'error') {
+                                          CustomSnackBar.showError(
+                                            localContext,
+                                            title: "Payment Error",
+                                            message: result['message'] ?? '',
+                                          );
+                                        }
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF1DB6E4),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(32),
+                                      ),
+                                      textStyle: GoogleFonts.montserrat(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  );
-                                  if (result != null && result is Map) {
-                                    if (result['type'] == 'success') {
-                                      CustomSnackBar.showSuccess(
-                                        context,
-                                        title: "Payment Prompt Sent",
-                                        message: result['message'] ?? '',
-                                      );
-                                    } else if (result['type'] == 'error') {
-                                      CustomSnackBar.showError(
-                                        context,
-                                        title: "Payment Error",
-                                        message: result['message'] ?? '',
-                                      );
-                                    }
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1DB6E4),
-                                  foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(32),
-                                  ),
-                                  textStyle: GoogleFonts.montserrat(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                    child: const Text("Prompt Payment"),
                                   ),
                                 ),
-                                child: const Text("Prompt Payment"),
-                              ),
-                            ),
-                          const SizedBox(height: 20),
-                        ],
+                              const SizedBox(height: 20),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
 
-                  // Avatar with progress
-                  Positioned(
-                    top: 0,
-                    child: _BookingProgressAvatar(
-                      imagePath: "assets/images/bookingicon.png",
-                      progress: progress / 100,
-                    ),
+                      // Avatar with progress
+                      Positioned(
+                        top: 0,
+                        child: _BookingProgressAvatar(
+                          imagePath: "assets/images/bookingicon.png",
+                          progress: progress / 100,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             );
           },
-        );
-      });
+        ),
+      );
+    },
+  );
 }
 
 // Helper widget for icon + detail

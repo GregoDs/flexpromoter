@@ -1,8 +1,10 @@
+import 'package:flexpromoter/main.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+
 class CustomSnackBar {
-  // Custom Snackbar
+  // Base method
   static void show(
     BuildContext context, {
     required String title,
@@ -15,10 +17,14 @@ class CustomSnackBar {
     Color? textColor,
     Duration? duration,
   }) {
-    // Hide any existing SnackBar first
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    // ✅ Always use the global messenger
+    final messenger = rootScaffoldMessengerKey.currentState;
+    if (messenger == null) return;
 
-    // Detect system brightness (light/dark)
+    // Hide any existing snackbar
+    messenger.hideCurrentSnackBar();
+
+    // Detect system brightness (fallback to context if needed)
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     // Dynamic colors
@@ -32,16 +38,19 @@ class CustomSnackBar {
     final Color txtColor =
         textColor ?? (isDarkMode ? Colors.white : Colors.black87);
 
-    // Get screen width for responsive sizing
-    final double screenWidth = MediaQuery.of(context).size.width;
+    // Use root context if available
+    final BuildContext? rootContext = rootScaffoldMessengerKey.currentContext;
+    final double screenWidth = rootContext != null
+        ? MediaQuery.of(rootContext).size.width
+        : MediaQuery.of(context).size.width;
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       SnackBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.05, // 5% padding from sides
+          horizontal: screenWidth * 0.05,
           vertical: 10,
         ),
         content: Container(
@@ -69,11 +78,7 @@ class CustomSnackBar {
                   color: iconBgColor,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  color: iconClr,
-                  size: 24,
-                ),
+                child: Icon(icon, color: iconClr, size: 24),
               ),
               const SizedBox(width: 12),
               // Texts
@@ -82,7 +87,6 @@ class CustomSnackBar {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Title
                     Text(
                       title,
                       style: GoogleFonts.montserrat(
@@ -93,7 +97,6 @@ class CustomSnackBar {
                     ),
                     if (message.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      // Message
                       Text(
                         message,
                         style: GoogleFonts.montserrat(
@@ -103,7 +106,6 @@ class CustomSnackBar {
                         ),
                       ),
                     ],
-                    // Action Button
                     if (actionLabel != null && onAction != null)
                       TextButton(
                         onPressed: onAction,
@@ -148,10 +150,10 @@ class CustomSnackBar {
       actionLabel: actionLabel,
       onAction: onAction,
       backgroundColor: isDarkMode
-          ? Color(0xFF0A3320) // Dark green background
+          ? const Color(0xFF0A3320)
           : Colors.green.shade50,
       iconColor: isDarkMode
-          ? Color(0xFF4ADE80) // Bright green icon
+          ? const Color(0xFF4ADE80)
           : Colors.green,
       textColor: isDarkMode ? Colors.white : null,
     );
@@ -174,10 +176,10 @@ class CustomSnackBar {
       actionLabel: actionLabel,
       onAction: onAction,
       backgroundColor: isDarkMode
-          ? Color(0xFF331111) // Dark red background
+          ? const Color(0xFF331111)
           : Colors.red.shade50,
       iconColor: isDarkMode
-          ? Color(0xFFFF5252) // Bright red icon
+          ? const Color(0xFFFF5252)
           : Colors.red,
       textColor: isDarkMode ? Colors.white : null,
     );
@@ -200,10 +202,10 @@ class CustomSnackBar {
       actionLabel: actionLabel,
       onAction: onAction,
       backgroundColor: isDarkMode
-          ? Color(0xFF332711) // Dark orange background
+          ? const Color(0xFF332711)
           : Colors.orange.shade50,
       iconColor: isDarkMode
-          ? Color(0xFFFFB74D) // Bright orange icon
+          ? const Color(0xFFFFB74D)
           : Colors.orange,
       textColor: isDarkMode ? Colors.white : null,
     );
@@ -226,10 +228,10 @@ class CustomSnackBar {
       actionLabel: actionLabel,
       onAction: onAction,
       backgroundColor: isDarkMode
-          ? Color(0xFF0A1B33) // Dark blue background
+          ? const Color(0xFF0A1B33)
           : Colors.blue.shade50,
       iconColor: isDarkMode
-          ? Color(0xFF64B5F6) // Bright blue icon
+          ? const Color(0xFF64B5F6)
           : Colors.blue,
       textColor: isDarkMode ? Colors.white : null,
     );

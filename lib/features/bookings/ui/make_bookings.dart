@@ -1,10 +1,32 @@
+import 'package:flexpromoter/features/bookings/cubit/make_booking_cubit.dart';
+import 'package:flexpromoter/features/bookings/models/make_bookings_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
-import 'package:flexpromoter/features/bookings/cubit/make_booking_cubit.dart';
-import 'package:flexpromoter/features/bookings/models/make_bookings_model.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flexpromoter/gen/colors.gen.dart';
+import 'package:flexpromoter/routes/app_routes.dart';
+import 'package:flexpromoter/utils/getters/getters.dart';
+import 'package:flexpromoter/utils/widgets/scaffold_messengers.dart';
+
+// Placeholder for Booking Cubit and State (to be linked later)
+class BookingCubit extends Cubit<BookingState> {
+  BookingCubit() : super(BookingInitial());
+}
+
+abstract class BookingState {}
+
+class BookingInitial extends BookingState {}
+
+class BookingLoading extends BookingState {}
+
+class BookingSuccess extends BookingState {}
+
+class BookingError extends BookingState {
+  final String errorMessage;
+  BookingError(this.errorMessage);
+}
 
 class MakeBookingsScreen extends StatefulWidget {
   const MakeBookingsScreen({super.key});
@@ -13,478 +35,444 @@ class MakeBookingsScreen extends StatefulWidget {
   State<MakeBookingsScreen> createState() => _MakeBookingsScreenState();
 }
 
-class _MakeBookingsScreenState extends State<MakeBookingsScreen>
-    with TickerProviderStateMixin {
-  final TextEditingController phoneNumberController = TextEditingController();
+class _MakeBookingsScreenState extends State<MakeBookingsScreen> {
+  bool _showValidationErrors = false;
+
+  // Controllers
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController productNameController = TextEditingController();
   final TextEditingController bookingPriceController = TextEditingController();
-  final TextEditingController bookingDaysController = TextEditingController();
   final TextEditingController initialDepositController =
       TextEditingController();
-  final TextEditingController productNameController = TextEditingController();
+  final TextEditingController bookingDaysController = TextEditingController();
 
-  late AnimationController _animationController;
-  late AnimationController _formAnimController;
-  late Animation<double> _formAnim;
-  bool _showAnimation = false;
+  // Validation state
+  String? firstNameError;
+  String? lastNameError;
+  String? phoneError;
+  String? productNameError;
+  String? bookingPriceError;
+  String? initialDepositError;
+  String? bookingDaysError;
 
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    );
-    _formAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _formAnim = CurvedAnimation(
-      parent: _formAnimController,
-      curve: Curves.easeOutBack,
-    );
-    _formAnimController.forward();
-  }
-
-  void _clearFields() {
-    phoneNumberController.clear();
-    firstNameController.clear();
-    lastNameController.clear();
-    bookingPriceController.clear();
-    bookingDaysController.clear();
-    initialDepositController.clear();
-    productNameController.clear();
-  }
-
-  void _showSuccessAnimation() {
+  void _validateFields() {
     setState(() {
-      _showAnimation = true;
+      firstNameError = firstNameController.text.trim().isEmpty
+          ? "First name is required"
+          : null;
+
+      lastNameError = lastNameController.text.trim().isEmpty
+          ? "Last name is required"
+          : null;
+
+      phoneError = phoneController.text.trim().isEmpty
+          ? "Phone number is required"
+          : (!RegExp(r'^\d{10,13}$').hasMatch(phoneController.text.trim())
+              ? "Enter a valid phone number"
+              : null);
+
+      productNameError = productNameController.text.trim().isEmpty
+          ? "Product name is required"
+          : null;
+
+      bookingPriceError = bookingPriceController.text.trim().isEmpty
+          ? "Booking price is required"
+          : (!RegExp(r'^\d+(\.\d{1,2})?$')
+                  .hasMatch(bookingPriceController.text.trim())
+              ? "Enter a valid price (e.g., 100.00)"
+              : null);
+
+      initialDepositError = initialDepositController.text.trim().isEmpty
+          ? "Initial deposit is required"
+          : (!RegExp(r'^\d+(\.\d{1,2})?$')
+                  .hasMatch(initialDepositController.text.trim())
+              ? "Enter a valid deposit (e.g., 50.00)"
+              : null);
+
+      bookingDaysError = bookingDaysController.text.trim().isEmpty
+          ? "Booking days are required"
+          : (!RegExp(r'^\d+$').hasMatch(bookingDaysController.text.trim())
+              ? "Enter a valid number of days"
+              : null);
     });
-    _animationController.forward().then((_) {
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          setState(() {
-            _showAnimation = false;
-          });
-          _animationController.reset();
-        }
-      });
+  }
+
+  void _submit() {
+    setState(() {
+      _showValidationErrors = true;
     });
+    _validateFields();
+
+    if (firstNameError == null &&
+        lastNameError == null &&
+        phoneError == null &&
+        productNameError == null &&
+        bookingPriceError == null &&
+        initialDepositError == null &&
+        bookingDaysError == null) {
+      final bookingRequest = BookingRequestModel(
+        firstName: firstNameController.text.trim(),
+        lastName: lastNameController.text.trim(),
+        phoneNumber: phoneController.text.trim(),
+        productName: productNameController.text.trim(),
+        bookingPrice: bookingPriceController.text.trim(),
+        initialDeposit: initialDepositController.text.trim(),
+        bookingDays: bookingDaysController.text.trim(),
+        userId: '', // Filled in repository
+      );
+
+      context.read<MakeBookingCubit>().createBooking(context, bookingRequest);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? Colors.white : Colors.black;
-    final backgroundColor =
-        isDarkMode ? const Color(0xFF10151A) : const Color(0xFFF5F8FA);
-    final cardColor = isDarkMode ? const Color(0xFF1A222C) : Colors.white;
-    final fieldBackgroundColor =
-        isDarkMode ? Colors.grey[850] : Colors.grey[100];
-    final borderColor = isDarkMode ? Colors.grey[700]! : Colors.grey[300]!;
-    final hintColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
+    final brightness = Theme.of(context).brightness;
+    final isDark = brightness == Brightness.dark;
+
+    final textTheme =
+        GoogleFonts.montserratTextTheme(Theme.of(context).textTheme);
+
+    final fieldColor = isDark ? Colors.grey[850]! : Colors.grey[200]!;
+    final textColor = isDark ? Colors.white : Colors.black87;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: isDark ? Colors.black : Colors.white,
       appBar: AppBar(
-        backgroundColor: backgroundColor,
         elevation: 0,
-        leadingWidth: 100,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          behavior: HitTestBehavior.opaque,
-          child: Row(
-            children: [
-              const SizedBox(width: 8),
-              Icon(Icons.arrow_back_ios_new, color: textColor, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                'Back',
-                style: GoogleFonts.montserrat(
-                  color: textColor,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                overflow: TextOverflow.clip,
-                softWrap: false,
-              ),
-            ],
-          ),
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: textColor),
+          onPressed: () => Navigator.pushReplacementNamed(context, Routes.home),
         ),
         centerTitle: true,
-        title: Padding(
-          padding: const EdgeInsets.only(right: 40, left: 25),
-          child: Text(
-            'Make Booking',
-            style: GoogleFonts.montserrat(
-              color: textColor,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+        title: Text(
+          "Make a Booking",
+          style: textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: textColor,
           ),
         ),
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(Icons.notifications_outlined, color: textColor),
-                onPressed: () {},
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    '0',
-                    style: GoogleFonts.montserrat(
-                      color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
-      body: Stack(
-        children: [
-          FadeTransition(
-            opacity: _formAnim,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.08),
-                end: Offset.zero,
-              ).animate(_formAnim),
-              child: Center(
-                child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 26),
-                  child: Card(
-                    color: cardColor,
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 28),
-                      child: BlocConsumer<MakeBookingCubit, MakeBookingState>(
-                        listener: (context, state) {
-                          if (state is MakeBookingSuccess) {
-                            _clearFields();
-                            _showSuccessAnimation();
-                          }
-                        },
-                        builder: (context, state) {
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
+      body: BlocConsumer<MakeBookingCubit, MakeBookingState>(
+        listener: (context, state) {
+          if (state is MakeBookingSuccess) {
+            CustomSnackBar.showSuccess(
+              context,
+              title: "Success",
+              message:
+                  "Kindly ask the customer to enter their Mpesa pin on prompt!",
+            );
+          } else if (state is MakeBookingError) {
+            CustomSnackBar.showError(
+              context,
+              title: "Error",
+              message: state.message,
+            );
+          }
+        },
+        builder: (context, state) {
+          final isLoading = state is MakeBookingLoading;
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 22,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Header section
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 18.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Header
-                              Column(
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: isDarkMode
-                                          ? Colors.blueGrey[800]
-                                          : Colors.blue[50],
-                                      shape: BoxShape.circle,
-                                    ),
-                                    padding: const EdgeInsets.all(18),
-                                    child: Icon(Icons.event_note_rounded,
-                                        color: Colors.blue[700], size: 38),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    "Book a Product",
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Fill in the details below to create a booking.",
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 14,
-                                      color: hintColor,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                "Register a New Customer",
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
                               ),
-                              const SizedBox(height: 24),
-                              // Form fields
-                              _buildInputField(
-                                label: 'First Name',
-                                controller: firstNameController,
-                                icon: Icons.person_outline,
-                                textColor: textColor,
-                                hintColor: hintColor ?? Colors.grey,
-                                fieldBackgroundColor:
-                                    fieldBackgroundColor ?? Colors.grey,
-                                borderColor: borderColor,
+                              const SizedBox(height: 4),
+                              Text(
+                                "Fill in the details below to register a customer and create a booking for them.",
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14.sp,
+                                  color: Colors.grey,
+                                  height: 1.4,
+                                ),
                               ),
-                              const SizedBox(height: 16),
-                              _buildInputField(
-                                label: 'Last Name',
-                                controller: lastNameController,
-                                icon: Icons.person_outline,
-                                textColor: textColor,
-                                hintColor: hintColor ?? Colors.grey,
-                                fieldBackgroundColor:
-                                    fieldBackgroundColor ?? Colors.grey,
-                                borderColor: borderColor,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildInputField(
-                                label: 'Phone Number',
-                                controller: phoneNumberController,
-                                icon: Icons.phone,
-                                keyboardType: TextInputType.phone,
-                                textColor: textColor,
-                                hintColor: hintColor ?? Colors.grey,
-                                fieldBackgroundColor:
-                                    fieldBackgroundColor ?? Colors.grey,
-                                borderColor: borderColor,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildInputField(
-                                label: 'Product Name',
-                                controller: productNameController,
-                                icon: Icons.shopping_bag_outlined,
-                                textColor: textColor,
-                                hintColor: hintColor ?? Colors.grey,
-                                fieldBackgroundColor:
-                                    fieldBackgroundColor ?? Colors.grey,
-                                borderColor: borderColor,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildInputField(
-                                label: 'Booking Price',
-                                controller: bookingPriceController,
-                                icon: Icons.attach_money,
-                                keyboardType: TextInputType.number,
-                                textColor: textColor,
-                                hintColor: hintColor ?? Colors.grey,
-                                fieldBackgroundColor:
-                                    fieldBackgroundColor ?? Colors.grey,
-                                borderColor: borderColor,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildInputField(
-                                label: 'Booking Days',
-                                controller: bookingDaysController,
-                                icon: Icons.calendar_today_outlined,
-                                keyboardType: TextInputType.number,
-                                textColor: textColor,
-                                hintColor: hintColor ?? Colors.grey,
-                                fieldBackgroundColor:
-                                    fieldBackgroundColor ?? Colors.grey,
-                                borderColor: borderColor,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildInputField(
-                                label: 'Initial Deposit',
-                                controller: initialDepositController,
-                                icon: Icons.account_balance_wallet_outlined,
-                                keyboardType: TextInputType.number,
-                                textColor: textColor,
-                                hintColor: hintColor ?? Colors.grey,
-                                fieldBackgroundColor:
-                                    fieldBackgroundColor ?? Colors.grey,
-                                borderColor: borderColor,
-                              ),
-                              const SizedBox(height: 28),
-                              if (state is MakeBookingLoading)
-                                const SpinKitThreeBounce(
-                                  color: Colors.blue,
-                                  size: 28,
-                                )
-                              else
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      // Basic validation: prevent empty fields
-                                      if (firstNameController.text.isEmpty ||
-                                          lastNameController.text.isEmpty ||
-                                          phoneNumberController.text.isEmpty ||
-                                          productNameController.text.isEmpty ||
-                                          bookingPriceController.text.isEmpty ||
-                                          bookingDaysController.text.isEmpty ||
-                                          initialDepositController
-                                              .text.isEmpty) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Please fill in all fields.',
-                                              style: GoogleFonts.montserrat(),
-                                            ),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                        return;
-                                      }
-                                      final bookingRequest =
-                                          BookingRequestModel(
-                                        phoneNumber: phoneNumberController.text,
-                                        userId: "1", // TODO: Get actual user ID
-                                        bookingPrice:
-                                            bookingPriceController.text,
-                                        bookingDays: bookingDaysController.text,
-                                        initialDeposit:
-                                            initialDepositController.text,
-                                        firstName: firstNameController.text,
-                                        lastName: lastNameController.text,
-                                        productName: productNameController.text,
-                                      );
-                                      context
-                                          .read<MakeBookingCubit>()
-                                          .createBooking(
-                                            context,
-                                            bookingRequest,
-                                          );
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+
+                        // Input fields
+                        Column(
+                          children: [
+                            // First & Last Name
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: firstNameController,
+                                    label: "First Name",
+                                    hint: "John",
+                                    icon: Icons.person_outline,
+                                    fieldColor: fieldColor,
+                                    textColor: textColor,
+                                    errorText: firstNameError,
+                                    onChanged: (_) {
+                                      if (_showValidationErrors)
+                                        _validateFields();
                                     },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue[700],
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      elevation: 4,
-                                      shadowColor: Colors.blue[200],
-                                    ),
-                                    child: Text(
-                                      'Create Booking',
-                                      style: GoogleFonts.montserrat(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                    inputFormatters: [
+                                      CapitalizeFirstLetterFormatter(),
+                                    ],
                                   ),
                                 ),
-                            ],
-                          );
-                        },
-                      ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: lastNameController,
+                                    label: "Last Name",
+                                    hint: "Doe",
+                                    icon: Icons.person_outline,
+                                    fieldColor: fieldColor,
+                                    textColor: textColor,
+                                    errorText: lastNameError,
+                                    onChanged: (_) {
+                                      if (_showValidationErrors)
+                                        _validateFields();
+                                    },
+                                    inputFormatters: [
+                                      CapitalizeFirstLetterFormatter(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12.h),
+
+                            // Phone number
+                            _buildTextField(
+                              controller: phoneController,
+                              label: "Customer Number",
+                              hint: "0712345678",
+                              icon: Icons.phone_outlined,
+                              keyboardType: TextInputType.phone,
+                              fieldColor: fieldColor,
+                              textColor: textColor,
+                              errorText: phoneError,
+                              onChanged: (_) {
+                                if (_showValidationErrors) _validateFields();
+                              },
+                            ),
+                            SizedBox(height: 12.h),
+
+                            // Product name
+                            _buildTextField(
+                              controller: productNameController,
+                              label: "Product Name & Code",
+                              hint: "Enter product name and code",
+                              icon: Icons.shopping_cart_outlined,
+                              fieldColor: fieldColor,
+                              textColor: textColor,
+                              errorText: productNameError,
+                              onChanged: (_) {
+                                if (_showValidationErrors) _validateFields();
+                              },
+                              inputFormatters: [
+                                CapitalizeFirstLetterFormatter(),
+                              ],
+                            ),
+                            SizedBox(height: 12.h),
+
+                            // Price & Deposit
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: bookingPriceController,
+                                    label: "Product Price",
+                                    hint: "100.00",
+                                    icon: Icons.payment_rounded,
+                                    keyboardType: TextInputType.number,
+                                    fieldColor: fieldColor,
+                                    textColor: textColor,
+                                    errorText: bookingPriceError,
+                                    onChanged: (_) {
+                                      if (_showValidationErrors)
+                                        _validateFields();
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: initialDepositController,
+                                    label: "Booking Deposit",
+                                    hint: "50.00",
+                                    icon: Icons.payment_rounded,
+                                    keyboardType: TextInputType.number,
+                                    fieldColor: fieldColor,
+                                    textColor: textColor,
+                                    errorText: initialDepositError,
+                                    onChanged: (_) {
+                                      if (_showValidationErrors)
+                                        _validateFields();
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12.h),
+
+                            // Booking Days
+                            _buildTextField(
+                              controller: bookingDaysController,
+                              label: "Duration of Payment",
+                              hint: "Enter number of days",
+                              icon: Icons.calendar_today_outlined,
+                              keyboardType: TextInputType.number,
+                              fieldColor: fieldColor,
+                              textColor: textColor,
+                              errorText: bookingDaysError,
+                              onChanged: (_) {
+                                if (_showValidationErrors) _validateFields();
+                              },
+                            ),
+                            SizedBox(height: 12.h),
+                          ],
+                        ),
+
+                        // Submit button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ColorName.primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onPressed: isLoading ? null : _submit,
+                            child: isLoading
+                                ? const SpinKitWave(
+                                    color: Colors.white,
+                                    size: 22,
+                                  )
+                                : Text(
+                                    "Register Customer",
+                                    style: GoogleFonts.montserrat(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                          ),
+                        ),
+
+                        SizedBox(height: 12.h),
+
+                        // Back to home
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Back to home? ",
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: textColor,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => Navigator.pushReplacementNamed(
+                                context,
+                                Routes.home,
+                              ),
+                              child: Text(
+                                "Home",
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: ColorName.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
-          if (_showAnimation)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Container(
-                  color: Colors.black.withOpacity(0.1),
-                  child: Lottie.asset(
-                    'assets/images/success.json',
-                    controller: _animationController,
-                    fit: BoxFit.contain,
-                    onLoaded: (composition) {
-                      // Ensure animation controller duration matches Lottie
-                      _animationController.duration = composition.duration;
-                    },
-                  ),
-                ),
-              ),
-            ),
-        ],
+              );
+            },
+          );
+        },
       ),
     );
   }
 
-  Widget _buildInputField({
-    required String label,
+  // TextField builder
+  Widget _buildTextField({
     required TextEditingController controller,
+    required String label,
+    required String hint,
     required IconData icon,
+    required Color fieldColor,
     required Color textColor,
-    required Color hintColor,
-    required Color fieldBackgroundColor,
-    required Color borderColor,
-    TextInputType? keyboardType,
+    String? errorText,
+    TextInputType keyboardType = TextInputType.text,
+    ValueChanged<String>? onChanged,
+    List<CapitalizeFirstLetterFormatter> inputFormatters = const [],
   }) {
-    // Use decimal keyboard for price/deposit fields
-    TextInputType? effectiveKeyboardType = keyboardType;
-    if (label == 'Booking Price' || label == 'Initial Deposit') {
-      effectiveKeyboardType =
-          const TextInputType.numberWithOptions(decimal: true);
-    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: GoogleFonts.montserrat(
-            fontSize: 14,
-            color: hintColor,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
+            color: textColor,
           ),
         ),
-        const SizedBox(height: 8),
-        TextFormField(
+        const SizedBox(height: 6),
+        TextField(
           controller: controller,
-          keyboardType: effectiveKeyboardType,
-          style: GoogleFonts.montserrat(
-            color: textColor,
-            fontSize: 14,
-          ),
+          keyboardType: keyboardType,
+          style: GoogleFonts.montserrat(color: textColor),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: hintColor, size: 20),
-            // Fix hint text to only lowercase the first letter after "Enter"
-            hintText: 'Enter ${label[0].toLowerCase()}${label.substring(1)}',
-            hintStyle: GoogleFonts.montserrat(
-              color: hintColor,
-              fontSize: 14,
-            ),
             filled: true,
-            fillColor: fieldBackgroundColor,
+            fillColor: fieldColor,
+            prefixIcon: Icon(icon, color: Colors.blue[800]),
+            hintText: hint,
+            hintStyle: GoogleFonts.montserrat(color: Colors.grey),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.blue[400]!),
+              borderSide: BorderSide.none,
             ),
           ),
+          onChanged: onChanged,
+          inputFormatters: inputFormatters,
         ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4),
+            child: Text(
+              errorText,
+              style: GoogleFonts.montserrat(color: Colors.red, fontSize: 13),
+            ),
+          ),
       ],
     );
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    _formAnimController.dispose();
-    phoneNumberController.dispose();
-    firstNameController.dispose();
-    lastNameController.dispose();
-    bookingPriceController.dispose();
-    bookingDaysController.dispose();
-    initialDepositController.dispose();
-    productNameController.dispose();
-    super.dispose();
   }
 }
