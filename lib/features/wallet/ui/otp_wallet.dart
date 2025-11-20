@@ -54,7 +54,7 @@ class _OtpWalletScreenState extends State<OtpWalletScreen>
   late Animation<Offset> _shakeAnimation;
 
   Timer? _timer;
-  int _resendCountdown = 60;
+  int _resendCountdown = 10;
   bool _canResend = false;
 
   @override

@@ -277,8 +277,39 @@ class BookingUser {
     this.country,
   });
 
-  factory BookingUser.fromJson(Map<String, dynamic> json) =>
-      _$BookingUserFromJson(json);
+  factory BookingUser.fromJson(Map<String, dynamic> json) {
+    // Helper function to safely convert to string
+    String? safeStringConversion(dynamic value) {
+      if (value == null) return null;
+      if (value is String) return value;
+      if (value is int) return value.toString();
+      if (value is double) return value.toString();
+      return value.toString();
+    }
+
+    // Helper function to safely convert to int
+    int? safeIntConversion(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value);
+      if (value is double) return value.toInt();
+      return null;
+    }
+
+    return BookingUser(
+      id: safeIntConversion(json['id']),
+      userId: safeIntConversion(json['user_id']),
+      referralId: safeIntConversion(json['referral_id']),
+      firstName: safeStringConversion(json['first_name']),
+      lastName: safeStringConversion(json['last_name']),
+      phoneNumber1: safeStringConversion(
+          json['phone_number_1']), // This was causing the error
+      idNumber: safeStringConversion(json['id_number']),
+      passportNumber: safeStringConversion(json['passport_number']),
+      dob: safeStringConversion(json['dob']),
+      country: safeStringConversion(json['country']),
+    );
+  }
 
   Map<String, dynamic> toJson() => _$BookingUserToJson(this);
 }
