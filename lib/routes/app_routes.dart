@@ -1,6 +1,5 @@
 import 'package:flexpromoter/exports.dart';
 import 'package:flexpromoter/features/auth/ui/otpverification.dart';
-import 'package:flexpromoter/features/bookings/cubit/bkpayment_cubit.dart';
 import 'package:flexpromoter/features/bookings/cubit/make_booking_cubit.dart';
 import 'package:flexpromoter/features/bookings/ui/bookings.dart';
 import 'package:flexpromoter/features/bookings/ui/make_bookings.dart';
@@ -10,9 +9,9 @@ import 'package:flexpromoter/features/leaderboard/ui/leaderboard_screen.dart';
 import 'package:flexpromoter/features/leaderboard/cubit/leaderboard_cubit.dart';
 import 'package:flexpromoter/features/leaderboard/repo/leaderboard_repository.dart';
 import 'package:flexpromoter/features/wallet/ui/otp_wallet.dart';
+import 'package:flexpromoter/features/wallet/ui/promoter_referrals.dart';
 import 'package:flexpromoter/features/wallet/ui/register_wallet.dart';
 import 'package:flexpromoter/features/wallet/cubit/wallet_cubit.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flexpromoter/features/auth/cubit/auth_cubit.dart';
 import 'package:flexpromoter/features/auth/repo/auth_repo.dart';
 import 'package:flexpromoter/features/auth/ui/login.dart';
@@ -34,46 +33,59 @@ final walletCubit = WalletCubit(); // Add global wallet cubit
 
 class AppRoutes {
   static final routes = {
+
+    
     Routes.splash: (context) => const SplashScreen(),
+
+
     Routes.onboarding: (context) => const OnBoardingScreen(),
+
+
     Routes.login: (context) => BlocProvider.value(
           value: authCubit,
           child: const LoginScreen(),
         ),
+
 
     Routes.otp: (context) => BlocProvider.value(
           value: authCubit,
           child: const OtpScreen(),
         ),
 
+
     Routes.home: (context) => const HomeScreen(),
+
 
     Routes.makeBookings: (context) => BlocProvider(
           create: (context) => MakeBookingCubit(BookingsRepository()),
           child: const MakeBookingsScreen(),
         ),
 
+
     Routes.bookings: (context) => BlocProvider.value(
           value: bookingsCubit,
           child: const BookingsScreen(),
         ),
 
+
     Routes.commissions: (context) => BlocProvider.value(
           value: commissionsCubit,
           child: const Commissions(),
         ),
+
+
     Routes.leaderboard: (context) => BlocProvider.value(
           value: LeaderboardCubit(repository: LeaderboardRepository()),
           child: const LeaderboardScreen(),
         ),
 
-    
+
     Routes.walletRegistration: (context) => BlocProvider.value(
           value: walletCubit,
           child: const RegisterWalletScreen(),
         ),
 
-   
+
     Routes.otpwalletscreen: (context) {
       final args =
           ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
@@ -87,6 +99,12 @@ class AppRoutes {
         ),
       );
     },
+
+
+    Routes.promoterReferrals: (context) => BlocProvider.value(
+          value: walletCubit,
+          child: const PromoterReferralsScreen(),
+        ),
   };
 }
 
@@ -105,4 +123,5 @@ class Routes {
   static const promptBookingPayment = 'prompt-bkpayment';
   static const walletRegistration = '/wallet-register';
   static const otpwalletscreen = '/otp-wallet';
+  static const promoterReferrals = '/promoter-referrals';
 }

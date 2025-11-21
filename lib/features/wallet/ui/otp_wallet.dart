@@ -233,8 +233,8 @@ class _OtpWalletScreenState extends State<OtpWalletScreen>
           } else if (state is WalletCreateSuccess) {
             CustomSnackBar.showSuccess(
               context,
-              title: "Wallet Created Successfully",
-              message: "Proceeding to STK push...",
+              title: "Success",
+              message: "Wallet Created Successfully",
             );
 
             Future.delayed(const Duration(milliseconds: 1000), () {

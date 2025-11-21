@@ -37,6 +37,7 @@ class User {
   final String? idNumber;
   final String? dob;
   final int phoneNumber;
+  final int? promoterId;
 
   User({
     required this.id,
@@ -49,6 +50,7 @@ class User {
     this.idNumber,
     this.dob,
     required this.phoneNumber,
+    this.promoterId,
   });
 
   // Factory method to create a User from JSON
@@ -64,6 +66,7 @@ class User {
       idNumber: json['id_number'] as String?,
       dob: json['dob'] as String?,
       phoneNumber: json['phone_number'] as int? ?? 0,
+      promoterId: json['promoter_id'] as int?,
     );
   }
 
@@ -80,6 +83,7 @@ class User {
       'id_number': idNumber,
       'dob': dob,
       'phone_number': phoneNumber,
+      'promoter_id': promoterId,
     };
   }
 }

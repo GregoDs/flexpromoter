@@ -6,6 +6,7 @@ import 'package:flexpromoter/features/auth/models/user_model.dart';
 import 'package:flexpromoter/features/wallet/model/register_model/customer_reg_model.dart';
 import 'package:flexpromoter/features/wallet/model/wallet_otp_model/wallet_otp_model.dart';
 import 'package:flexpromoter/features/wallet/model/create_wallet_model/create_wallet_model.dart';
+import 'package:flexpromoter/features/wallet/model/promoter_referrals_model/promoter_referrals_model.dart';
 import 'package:flexpromoter/utils/cache/shared_preferences_helper.dart';
 import 'package:flexpromoter/utils/services/api_service.dart';
 import 'package:flexpromoter/utils/services/error_handler.dart';
@@ -129,7 +130,7 @@ Future<CreateWalletResponse> createCustomerWallet({
 
     final payload = {
       "merchant_id": merchantId,
-      "user_id": customerId, 
+      "user_id": customerId,
       "promoter_id": promoterId,
       "booking_source": bookingSource,
     };
@@ -166,6 +167,59 @@ Future<CreateWalletResponse> createCustomerWallet({
       message = e.toString();
     }
     AppLogger.log("❌ Error in wallet creation: $message\n$stack");
+    throw (message);
+  }
+}
+
+//FETCH PROMOTER REFERRALS (WALLET REGISTRATION)
+Future<PromoterReferralsResponse> fetchPromoterReferrals({
+  required String promoterPhone,
+  int? page,
+}) async {
+  try {
+    AppLogger.log("📤 Fetching promoter referrals for phone: $promoterPhone");
+
+    // Use the correct endpoint base - should be wallet endpoint
+    final url = "${ApiService.prodEndpointCreateWallet}/merchant-wallet/promoter-referrals";
+
+    // Try POST method if GET returns 405
+    final payload = {
+      "search_filter": promoterPhone,
+      "page": page ?? 1,
+    };
+
+    AppLogger.log("📦 Request Payload: $payload");
+
+    final response = await _apiService.post(
+      url,
+      data: payload,
+      requiresAuth: true,
+    );
+
+    // Parse the response using the PromoterReferralsResponse model
+    final referralsResponse = PromoterReferralsResponse.fromJson(response.data);
+
+    // Check backend error field
+    if (referralsResponse.errors != null &&
+        referralsResponse.errors!.isNotEmpty) {
+      AppLogger.log("⚠️ Backend errors: ${referralsResponse.errors}");
+      throw Exception(referralsResponse.errors!.first.toString());
+    }
+
+    final prettyJson =
+        const JsonEncoder.withIndent('  ').convert(referralsResponse.toJson());
+    AppLogger.log("✅ Promoter referrals Response:\n$prettyJson");
+
+    return referralsResponse;
+  } catch (e, stack) {
+    // Handle different exception types
+    String message;
+    if (e is DioException) {
+      message = ErrorHandler.handleError(e);
+    } else {
+      message = e.toString();
+    }
+    AppLogger.log("❌ Error in fetching promoter referrals: $message\n$stack");
     throw (message);
   }
 }

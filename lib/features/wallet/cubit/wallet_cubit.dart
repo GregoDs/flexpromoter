@@ -1,3 +1,4 @@
+import 'package:flexpromoter/features/auth/models/user_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flexpromoter/features/wallet/cubit/wallet_state.dart';
 import 'package:flexpromoter/features/wallet/repo/wallet_repo.dart'
@@ -134,67 +135,16 @@ class WalletCubit extends Cubit<WalletState> {
       }
 
       AppLogger.log("📱 Retrieved user data: ${userData.toString()}");
+      final userModel = UserModel.fromJson(userData);
 
-      // Extract promoter ID from user data structure
-      int? promoterId;
-
-      // Handle different user data structures
-      if (userData['data'] != null) {
-        final dataObj = userData['data'];
-
-        // Check if data is an array (from OTP verification response)
-        if (dataObj is List<dynamic>) {
-          AppLogger.log("📋 Processing array-based data structure");
-
-          // Look for promoter data in the array (usually second object)
-          for (var item in dataObj) {
-            if (item is Map<String, dynamic>) {
-              // Check if this object has promoter-specific fields
-              if (item.containsKey('user_id') &&
-                  item.containsKey('first_name')) {
-                promoterId = item['id'] as int?;
-                AppLogger.log(
-                    "👤 Found promoter ID in data array: $promoterId");
-                break;
-              }
-              // Fallback to user ID if no promoter data found
-              if (item.containsKey('id') && !item.containsKey('user_id')) {
-                promoterId = item['id'] as int?;
-                AppLogger.log("👤 Using user ID as fallback: $promoterId");
-              }
-            }
-          }
-        }
-        // Check if data is an object (from login response)
-        else if (dataObj is Map<String, dynamic>) {
-          AppLogger.log("📋 Processing object-based data structure");
-
-          // Check if there's a nested user object
-          if (dataObj.containsKey('user') &&
-              dataObj['user'] is Map<String, dynamic>) {
-            final userObj = dataObj['user'] as Map<String, dynamic>;
-            promoterId = userObj['id'] as int?;
-            AppLogger.log("👤 Found promoter ID in user object: $promoterId");
-          } else {
-            // Direct ID in the data object
-            promoterId = dataObj['id'] as int?;
-            AppLogger.log("👤 Found promoter ID in data object: $promoterId");
-          }
-        }
-      } else {
-        // Direct structure fallback
-        promoterId = userData['id'] as int?;
-        AppLogger.log("👤 Using direct ID structure: $promoterId");
-      }
-
+      // Handle nullable promoterId properly
+      final promoterId = userModel.user.promoterId;
       if (promoterId == null) {
-        AppLogger.log("❌ Promoter ID not found in user data structure");
+        AppLogger.log("❌ Promoter ID not found in user data");
         emit(const WalletCreateFailure(
             message: "Promoter ID not available. Please login again."));
         return;
       }
-
-      AppLogger.log("👤 Using promoter ID: $promoterId for wallet creation");
 
       // Call the existing create wallet method
       await createCustomerWallet(
@@ -206,6 +156,54 @@ class WalletCubit extends Cubit<WalletState> {
     } catch (e) {
       AppLogger.log("❌ Automatic wallet creation error: $e");
       emit(WalletCreateFailure(message: e.toString()));
+    }
+  }
+
+  /// Fetch promoter referrals
+  /// This method automatically retrieves promoter phone from shared preferences
+  Future<void> fetchPromoterReferrals({
+    int? page,
+  }) async {
+    try {
+      emit(const WalletLoading());
+
+      AppLogger.log("📞 Starting referrals fetch");
+
+      // Get promoter phone from shared preferences
+      final userData = await SharedPreferencesHelper.getUserData();
+      if (userData == null) {
+        throw Exception('User Data not found. Please Login and try again');
+      }
+      final userModel = UserModel.fromJson(userData);
+      final promoterPhone = userModel.user.phoneNumber.toString();
+      // const userId = '141192';
+
+      AppLogger.log("Logging user data: $userData for referrals fetch");
+
+      AppLogger.log(
+          "📱 Using promoter phone: $promoterPhone for referrals fetch");
+
+      final response = await wallet_repo.fetchPromoterReferrals(
+        promoterPhone: promoterPhone,
+        page: page,
+      );
+
+      // Check if referrals fetch was successful
+      if (response.success && response.statusCode == 200) {
+        AppLogger.log("✅ Promoter referrals fetch successful");
+        emit(WalletReferralsSuccess(response: response));
+      } else {
+        // Handle backend errors
+        String errorMessage = "Failed to fetch referrals";
+        if (response.errors != null && response.errors!.isNotEmpty) {
+          errorMessage = response.errors!.join(', ');
+        }
+        AppLogger.log("❌ Promoter referrals fetch failed: $errorMessage");
+        emit(WalletReferralsFailure(message: errorMessage));
+      }
+    } catch (e) {
+      AppLogger.log("❌ Promoter referrals fetch error: $e");
+      emit(WalletReferralsFailure(message: e.toString()));
     }
   }
 }

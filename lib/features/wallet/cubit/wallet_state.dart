@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flexpromoter/features/wallet/model/register_model/customer_reg_model.dart';
 import 'package:flexpromoter/features/wallet/model/wallet_otp_model/wallet_otp_model.dart';
 import 'package:flexpromoter/features/wallet/model/create_wallet_model/create_wallet_model.dart';
+import 'package:flexpromoter/features/wallet/model/promoter_referrals_model/promoter_referrals_model.dart';
 
 abstract class WalletState extends Equatable {
   const WalletState();
@@ -69,6 +70,25 @@ class WalletCreateFailure extends WalletState {
   final String message;
 
   const WalletCreateFailure({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}
+
+// Add promoter referrals states
+class WalletReferralsSuccess extends WalletState {
+  final PromoterReferralsResponse response;
+
+  const WalletReferralsSuccess({required this.response});
+
+  @override
+  List<Object?> get props => [response];
+}
+
+class WalletReferralsFailure extends WalletState {
+  final String message;
+
+  const WalletReferralsFailure({required this.message});
 
   @override
   List<Object?> get props => [message];

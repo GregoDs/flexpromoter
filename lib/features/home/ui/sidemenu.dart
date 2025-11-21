@@ -73,7 +73,7 @@ class _SideMenuState extends State<SideMenu> {
           widget: const SubCategory(
             title: 'Cohort',
           ),
-          route: Routes.makeBookings,
+          route: Routes.promoterReferrals,
         ),
       ],
     ),
